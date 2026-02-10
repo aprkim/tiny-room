@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Tiny Room</title>
+<link rel="icon" type="image/svg+xml" href="favicon.svg">
 <script type="importmap">
 {
     "imports": {
@@ -822,6 +823,25 @@ input::placeholder { color: var(--muted2); }
     display: none;
 }
 
+/* Spotlighted camera tiles in featured area: keep camera behavior */
+.screenshare-area .video-tile.tile-spotlighted .video-container video {
+    object-fit: cover;
+    background: var(--soft);
+}
+
+.screenshare-area .video-tile.tile-spotlighted .member-info {
+    display: flex;
+}
+
+/* Spotlight active indicator */
+.video-tile.tile-spotlighted {
+    border: 2px solid var(--accent);
+}
+
+.video-tile.tile-spotlighted .spotlight-btn {
+    background: var(--accent);
+}
+
 /* Camera strip: grid row below screenshare */
 .camera-strip {
     grid-column: 1;
@@ -1474,6 +1494,22 @@ function createVideoTile(memberId, name, streamType, isLocal) {
     resizeHandle.title = 'Drag to resize';
     tile.appendChild(resizeHandle);
 
+    // Spotlight button for camera tiles
+    if (streamType === 'camera') {
+        const tileActions = document.createElement('div');
+        tileActions.className = 'tile-actions';
+        const spotlightBtn = document.createElement('button');
+        spotlightBtn.className = 'tile-action-btn spotlight-btn';
+        spotlightBtn.title = 'Spotlight';
+        spotlightBtn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 3H5a2 2 0 0 0-2 2v3"/><path d="M21 8V5a2 2 0 0 0-2-2h-3"/><path d="M3 16v3a2 2 0 0 0 2 2h3"/><path d="M16 21h3a2 2 0 0 0 2-2v-3"/></svg>';
+        spotlightBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            toggleSpotlight(tile, spotlightBtn);
+        });
+        tileActions.appendChild(spotlightBtn);
+        tile.appendChild(tileActions);
+    }
+
     // Fullscreen button for screenshare tiles
     if (streamType === 'screenshare') {
         const tileActions = document.createElement('div');
@@ -1517,31 +1553,36 @@ function updateGridLayout() {
         c => c.style.display !== 'none'
     );
     const hasScreenshare = allTiles.some(c => c.dataset.streamType === 'screenshare');
+    const hasSpotlight = allTiles.some(c => c.classList.contains('tile-spotlighted'));
 
     // Reset grid classes
     grid.className = '';
 
-    if (hasScreenshare) {
+    if (hasScreenshare || hasSpotlight) {
         grid.classList.add('presentation');
 
-        // Build screenshare area (row 1)
+        // Build featured area (row 1)
         let area = grid.querySelector('.screenshare-area');
         if (!area) {
             area = document.createElement('div');
             area.className = 'screenshare-area';
             grid.prepend(area);
         }
+        // Screenshare tiles go into featured area
         const screenTiles = allTiles.filter(c => c.dataset.streamType === 'screenshare');
         screenTiles.forEach(tile => area.appendChild(tile));
+        // Spotlighted camera tiles also go into featured area
+        const spotlightTiles = allTiles.filter(c => c.dataset.streamType === 'camera' && c.classList.contains('tile-spotlighted'));
+        spotlightTiles.forEach(tile => area.appendChild(tile));
 
-        // Build camera strip (row 2)
+        // Build camera strip (row 2) — non-spotlighted cameras only
         let strip = grid.querySelector('.camera-strip');
         if (!strip) {
             strip = document.createElement('div');
             strip.className = 'camera-strip';
             grid.appendChild(strip);
         }
-        const camTiles = allTiles.filter(c => c.dataset.streamType === 'camera');
+        const camTiles = allTiles.filter(c => c.dataset.streamType === 'camera' && !c.classList.contains('tile-spotlighted'));
         camTiles.forEach(tile => {
             if (!tile.classList.contains('tile-dragged')) {
                 tile.style.bottom = '';
@@ -1591,6 +1632,34 @@ function toggleTileFullscreen(tile, btn) {
             showError('Fullscreen not available');
         });
     }
+}
+
+// ===== Spotlight =====
+const SPOTLIGHT_EXPAND_SVG = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 3H5a2 2 0 0 0-2 2v3"/><path d="M21 8V5a2 2 0 0 0-2-2h-3"/><path d="M3 16v3a2 2 0 0 0 2 2h3"/><path d="M16 21h3a2 2 0 0 0 2-2v-3"/></svg>';
+const SPOTLIGHT_MINIMIZE_SVG = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 3v3a2 2 0 0 1-2 2H3"/><path d="M21 8h-3a2 2 0 0 1-2-2V3"/><path d="M3 16h3a2 2 0 0 1 2 2v3"/><path d="M16 21v-3a2 2 0 0 1 2-2h3"/></svg>';
+
+function toggleSpotlight(tile, btn) {
+    const wasSpotlighted = tile.classList.contains('tile-spotlighted');
+
+    // Remove spotlight from all tiles (only one at a time)
+    document.querySelectorAll('#videoGrid .video-tile.tile-spotlighted').forEach(t => {
+        t.classList.remove('tile-spotlighted');
+        const otherBtn = t.querySelector('.spotlight-btn');
+        if (otherBtn) {
+            otherBtn.innerHTML = SPOTLIGHT_EXPAND_SVG;
+            otherBtn.title = 'Spotlight';
+        }
+    });
+
+    if (!wasSpotlighted) {
+        tile.classList.add('tile-spotlighted');
+        if (btn) {
+            btn.innerHTML = SPOTLIGHT_MINIMIZE_SVG;
+            btn.title = 'Remove spotlight';
+        }
+    }
+
+    updateGridLayout();
 }
 
 document.addEventListener('fullscreenchange', () => {
@@ -1669,8 +1738,16 @@ function initResize(tile, startX, startY) {
         tile.style.left = (tileRect.left - gridRect.left) + 'px';
         tile.style.top = (tileRect.top - gridRect.top) + 'px';
         tile.style.width = tileRect.width + 'px';
+        tile.style.height = tileRect.height + 'px';
         tile.classList.add('tile-dragged');
         updateGridLayout();
+    }
+
+    // Capture dimensions BEFORE tile-resized removes the ::before aspect-ratio
+    const startWidth = tile.offsetWidth;
+    const startHeight = tile.offsetHeight;
+    if (!tile.style.height) {
+        tile.style.height = startHeight + 'px';
     }
 
     tile.classList.add('tile-resized', 'tile-resizing');
@@ -1680,8 +1757,8 @@ function initResize(tile, startX, startY) {
         tile,
         startX,
         startY,
-        startWidth: tile.offsetWidth,
-        startHeight: tile.offsetHeight,
+        startWidth,
+        startHeight,
         gridRect
     };
 }
@@ -1771,6 +1848,15 @@ window.resetTileLayout = () => {
         tile.style.bottom = '';
         tile.style.width = '';
         tile.style.height = '';
+    });
+    // Clear spotlight
+    document.querySelectorAll('#videoGrid .video-tile.tile-spotlighted').forEach(tile => {
+        tile.classList.remove('tile-spotlighted');
+        const btn = tile.querySelector('.spotlight-btn');
+        if (btn) {
+            btn.innerHTML = SPOTLIGHT_EXPAND_SVG;
+            btn.title = 'Spotlight';
+        }
     });
     hideResetButton();
     updateGridLayout();
