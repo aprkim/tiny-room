@@ -1197,6 +1197,9 @@ function updateEntryButtons() {
 const urlCode = new URLSearchParams(window.location.search).get('code');
 if (urlCode) {
     codeInput.value = urlCode;
+    // Hide "Start a Room" and divider when joining via link
+    btnCreate.style.display = 'none';
+    document.querySelector('.entry-divider').style.display = 'none';
 }
 
 updateEntryButtons();
