@@ -219,7 +219,7 @@ input::placeholder { color: var(--muted2); }
 .entry-join-row input { flex: 1; min-width: 0; }
 
 .entry-join-row .btn-join {
-    flex: 1 !important;
+    flex: 0 0 30% !important;
     width: auto !important;
     border-radius: calc(var(--radius) * 0.5);
     padding: 0.6rem 0;
@@ -1054,7 +1054,7 @@ input::placeholder { color: var(--muted2); }
         </div>
         <div class="entry-join-row">
             <input type="text" id="codeInput" placeholder="E.G. ABC123" maxlength="12" autocomplete="off">
-            <input type="tel" id="pinInput" placeholder="PIN" maxlength="6" inputmode="numeric" pattern="[0-9]*" autocomplete="off" style="display:none;text-align:center;letter-spacing:0.2em;flex:1;">
+            <input type="tel" id="pinInput" placeholder="PIN" maxlength="6" inputmode="numeric" pattern="[0-9]*" autocomplete="off" style="display:none;text-align:center;letter-spacing:0.2em;flex:0 0 70%;">
             <button id="btnJoin" class="btn-join btn-secondary" onclick="window.joinRoom()">Join</button>
         </div>
     </div>
