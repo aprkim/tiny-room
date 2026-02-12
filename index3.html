@@ -1347,7 +1347,7 @@ window.copyLink = (btn) => {
 
 window.copyCode = window.copyLink;
 
-// ===== Custom Slug =====
+// ===== Custom Room Name =====
 function sanitizeSlug(raw) {
     return raw.toLowerCase().trim()
         .replace(/\s+/g, '-')
@@ -1420,7 +1420,7 @@ function makeCodeBadgeEditable(badgeEl) {
             badgeEl.style.border = '';
             updateAllCodeBadges();
             showToast(customSlug
-                ? `Room slug set to "${customSlug}"${pin ? ' with PIN' : ''}`
+                ? `Room name set to "${customSlug}"${pin ? ' with PIN' : ''}`
                 : 'Using default room code');
         }
 
