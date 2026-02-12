@@ -1050,6 +1050,10 @@ input::placeholder { color: var(--muted2); }
                 <input type="text" id="codeInput" placeholder="E.G. ABC123" maxlength="12" autocomplete="off">
             </div>
         </div>
+        <div id="pinSection" style="display:none;">
+            <label for="pinInput">Enter PIN to join</label>
+            <input type="tel" id="pinInput" placeholder="PIN" maxlength="6" inputmode="numeric" pattern="[0-9]*" autocomplete="off" style="text-align:center;letter-spacing:0.3em;font-size:1.1rem;">
+        </div>
         <button id="btnJoin" class="btn-join btn-secondary" onclick="window.joinRoom()">Join</button>
     </div>
 </div>
@@ -1139,11 +1143,12 @@ import MiniChat from 'https://proto2.makedo.com:8883/v04/scripts/minichat-api.js
 // ===== Firebase =====
 const FIREBASE_DB = 'https://tiny-room-3967e-default-rtdb.firebaseio.com';
 
-async function saveSlug(slug, roomCode) {
+async function saveSlug(slug, roomCode, pin) {
     try {
+        const data = pin ? { code: roomCode, pin } : { code: roomCode };
         await fetch(`${FIREBASE_DB}/slugs/${slug}.json`, {
             method: 'PUT',
-            body: JSON.stringify(roomCode)
+            body: JSON.stringify(data)
         });
     } catch (e) { console.warn('Failed to save slug:', e); }
 }
@@ -1151,8 +1156,11 @@ async function saveSlug(slug, roomCode) {
 async function lookupSlug(slug) {
     try {
         const res = await fetch(`${FIREBASE_DB}/slugs/${slug}.json`);
-        const code = await res.json();
-        return code || null;
+        const data = await res.json();
+        if (!data) return null;
+        // Support old format (plain string) and new format (object)
+        if (typeof data === 'string') return { code: data, pin: null };
+        return { code: data.code, pin: data.pin || null };
     } catch (e) { return null; }
 }
 
@@ -1160,6 +1168,7 @@ async function lookupSlug(slug) {
 let isLeavingRoom = false;
 let localName = '';
 let customSlug = '';
+let requiredPin = null;
 
 // ===== Init =====
 MiniChat.init({
@@ -1253,24 +1262,28 @@ if (urlSlug && urlCode) {
 }
 
 // If slug but no code, look up from Firebase
-function setupSlugJoin(code) {
+function setupSlugJoin(code, pin) {
     codeInput.value = code;
     btnCreate.style.display = 'none';
     document.querySelector('.entry-divider').style.display = 'none';
     document.getElementById('codeSection').style.display = 'none';
+    if (pin) {
+        requiredPin = pin;
+        document.getElementById('pinSection').style.display = '';
+    }
     btnJoin.classList.remove('btn-secondary');
     btnJoin.classList.add('btn-primary');
     updateEntryButtons();
 }
 
 if (urlSlug && !urlCode) {
-    lookupSlug(urlSlug).then(code => {
-        if (code) setupSlugJoin(code);
+    lookupSlug(urlSlug).then(data => {
+        if (data) setupSlugJoin(data.code, data.pin);
     });
 }
 
 if (urlCode) {
-    setupSlugJoin(urlCode);
+    setupSlugJoin(urlCode, null);
 }
 
 updateEntryButtons();
@@ -1361,6 +1374,9 @@ function makeCodeBadgeEditable(badgeEl) {
     badgeEl.addEventListener('click', () => {
         if (badgeEl.querySelector('input')) return;
 
+        const wrapper = document.createElement('div');
+        wrapper.style.cssText = 'display:flex;gap:4px;align-items:center;';
+
         const input = document.createElement('input');
         input.type = 'text';
         input.className = 'topbar-code-edit';
@@ -1368,40 +1384,65 @@ function makeCodeBadgeEditable(badgeEl) {
         input.placeholder = MiniChat.roomCode || 'custom-name';
         input.maxLength = 48;
 
+        const pinInput = document.createElement('input');
+        pinInput.type = 'tel';
+        pinInput.className = 'topbar-code-edit';
+        pinInput.value = '';
+        pinInput.placeholder = 'PIN';
+        pinInput.maxLength = 6;
+        pinInput.inputMode = 'numeric';
+        pinInput.pattern = '[0-9]*';
+        pinInput.style.cssText = 'width:60px;min-width:60px;text-align:center;';
+
+        wrapper.appendChild(input);
+        wrapper.appendChild(pinInput);
+
         badgeEl.textContent = '';
         badgeEl.style.padding = '0';
         badgeEl.style.background = 'none';
         badgeEl.style.border = 'none';
-        badgeEl.appendChild(input);
+        badgeEl.appendChild(wrapper);
         input.focus();
         input.select();
 
+        let committed = false;
         function commit() {
-            if (!badgeEl.contains(input)) return;
+            if (committed) return;
+            if (!badgeEl.contains(wrapper)) return;
+            committed = true;
             customSlug = sanitizeSlug(input.value);
+            const pin = pinInput.value.replace(/\D/g, '');
             if (customSlug && MiniChat.roomCode) {
-                saveSlug(customSlug, MiniChat.roomCode);
+                saveSlug(customSlug, MiniChat.roomCode, pin || null);
             }
             badgeEl.style.padding = '';
             badgeEl.style.background = '';
             badgeEl.style.border = '';
             updateAllCodeBadges();
             showToast(customSlug
-                ? `Room slug set to "${customSlug}"`
+                ? `Room slug set to "${customSlug}"${pin ? ' with PIN' : ''}`
                 : 'Using default room code');
         }
 
-        input.addEventListener('keydown', (e) => {
-            if (e.key === 'Enter') { e.preventDefault(); commit(); }
-            if (e.key === 'Escape') {
-                e.preventDefault();
-                badgeEl.style.padding = '';
-                badgeEl.style.background = '';
-                badgeEl.style.border = '';
-                updateAllCodeBadges();
-            }
+        function cancel() {
+            committed = true;
+            badgeEl.style.padding = '';
+            badgeEl.style.background = '';
+            badgeEl.style.border = '';
+            updateAllCodeBadges();
+        }
+
+        [input, pinInput].forEach(el => {
+            el.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter') { e.preventDefault(); commit(); }
+                if (e.key === 'Escape') { e.preventDefault(); cancel(); }
+            });
+            el.addEventListener('blur', () => {
+                setTimeout(() => {
+                    if (!wrapper.contains(document.activeElement)) commit();
+                }, 100);
+            });
         });
-        input.addEventListener('blur', commit);
     });
 }
 
@@ -1430,8 +1471,16 @@ window.joinRoom = async () => {
     const name = nameInput.value.trim();
     const code = codeInput.value.trim();
     if (!name || !code) return;
-    localName = name;
 
+    if (requiredPin) {
+        const enteredPin = document.getElementById('pinInput').value.replace(/\D/g, '');
+        if (enteredPin !== requiredPin) {
+            showError('Incorrect PIN');
+            return;
+        }
+    }
+
+    localName = name;
     btnJoin.disabled = true;
 
     try {
