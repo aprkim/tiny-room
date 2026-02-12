@@ -1044,11 +1044,13 @@ input::placeholder { color: var(--muted2); }
             <span>OR</span>
         </div>
 
-        <label for="codeInput">Join with room code</label>
-        <div class="entry-join-row">
-            <input type="text" id="codeInput" placeholder="E.G. ABC123" maxlength="12" autocomplete="off">
-            <button id="btnJoin" class="btn-join btn-secondary" onclick="window.joinRoom()">Join</button>
+        <div id="codeSection">
+            <label for="codeInput">Join with room code</label>
+            <div class="entry-join-row">
+                <input type="text" id="codeInput" placeholder="E.G. ABC123" maxlength="12" autocomplete="off">
+            </div>
         </div>
+        <button id="btnJoin" class="btn-join btn-secondary" onclick="window.joinRoom()">Join</button>
     </div>
 </div>
 
@@ -1251,22 +1253,24 @@ if (urlSlug && urlCode) {
 }
 
 // If slug but no code, look up from Firebase
+function setupSlugJoin(code) {
+    codeInput.value = code;
+    btnCreate.style.display = 'none';
+    document.querySelector('.entry-divider').style.display = 'none';
+    document.getElementById('codeSection').style.display = 'none';
+    btnJoin.classList.remove('btn-secondary');
+    btnJoin.classList.add('btn-primary');
+    updateEntryButtons();
+}
+
 if (urlSlug && !urlCode) {
     lookupSlug(urlSlug).then(code => {
-        if (code) {
-            codeInput.value = code;
-            btnCreate.style.display = 'none';
-            document.querySelector('.entry-divider').style.display = 'none';
-            updateEntryButtons();
-        }
+        if (code) setupSlugJoin(code);
     });
 }
 
 if (urlCode) {
-    codeInput.value = urlCode;
-    // Hide "Start a Room" and divider when joining via link
-    btnCreate.style.display = 'none';
-    document.querySelector('.entry-divider').style.display = 'none';
+    setupSlugJoin(urlCode);
 }
 
 updateEntryButtons();
