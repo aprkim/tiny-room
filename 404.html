@@ -5,8 +5,10 @@
   <title>Redirecting...</title>
   <script>
     (function() {
-      var slug = window.location.pathname.replace(/^\/+|\/+$/g, '');
-      if (slug) {
+      var path = window.location.pathname;
+      var match = path.match(/^\/in\/(.+)/);
+      if (match) {
+        var slug = match[1].replace(/\/+$/g, '');
         var params = new URLSearchParams(window.location.search);
         params.set('slug', slug);
         window.location.replace('/' + '?' + params.toString());

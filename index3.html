@@ -1321,7 +1321,7 @@ window.copyRawCode = (btn) => {
 window.copyLink = (btn) => {
     if (!MiniChat.roomCode) return;
     const url = customSlug
-        ? window.location.origin + '/' + customSlug + '?code=' + MiniChat.roomCode
+        ? window.location.origin + '/in/' + customSlug + '?code=' + MiniChat.roomCode
         : window.location.origin + '/?code=' + MiniChat.roomCode;
     navigator.clipboard.writeText(url).then(() => {
         if (btn) showCopiedTip(btn, 'Copied!');
