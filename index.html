@@ -1220,10 +1220,19 @@ function updateEntryButtons() {
 }
 
 const urlParams = new URLSearchParams(window.location.search);
-const urlCode = urlParams.get('code');
+let urlCode = urlParams.get('code');
 const urlSlug = urlParams.get('slug');
 
 if (urlSlug) customSlug = urlSlug;
+
+// If slug + code both present, remember the mapping
+if (urlSlug && urlCode) {
+    localStorage.setItem('slug:' + urlSlug, urlCode);
+}
+// If slug but no code, look up from saved mapping
+if (urlSlug && !urlCode) {
+    urlCode = localStorage.getItem('slug:' + urlSlug);
+}
 
 if (urlCode) {
     codeInput.value = urlCode;
@@ -1338,6 +1347,9 @@ function makeCodeBadgeEditable(badgeEl) {
         function commit() {
             if (!badgeEl.contains(input)) return;
             customSlug = sanitizeSlug(input.value);
+            if (customSlug && MiniChat.roomCode) {
+                localStorage.setItem('slug:' + customSlug, MiniChat.roomCode);
+            }
             badgeEl.style.padding = '';
             badgeEl.style.background = '';
             badgeEl.style.border = '';
