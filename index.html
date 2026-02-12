@@ -1262,7 +1262,7 @@ if (urlSlug && urlCode) {
     saveSlug(urlSlug, urlCode);
 }
 
-// If slug but no code, look up from Firebase
+// Slug join: hide code input, show PIN if needed
 function setupSlugJoin(code, pin) {
     codeInput.value = code;
     codeInput.style.display = 'none';
@@ -1284,8 +1284,11 @@ if (urlSlug && !urlCode) {
     });
 }
 
+// Direct ?code= link: show pre-populated code + join (original UI)
 if (urlCode) {
-    setupSlugJoin(urlCode, null);
+    codeInput.value = urlCode;
+    btnCreate.style.display = 'none';
+    document.querySelector('.entry-divider').style.display = 'none';
 }
 
 updateEntryButtons();
