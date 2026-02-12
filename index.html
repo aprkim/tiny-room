@@ -1417,15 +1417,26 @@ function makeCodeBadgeEditable(badgeEl) {
         input.select();
 
         let committed = false;
-        function commit() {
+        async function commit() {
             if (committed) return;
             if (!badgeEl.contains(wrapper)) return;
             committed = true;
-            customSlug = sanitizeSlug(input.value);
+            const newSlug = sanitizeSlug(input.value);
             const pin = pinInput.value.replace(/\D/g, '');
-            if (customSlug && MiniChat.roomCode) {
+
+            if (newSlug && MiniChat.roomCode) {
+                const existing = await lookupSlug(newSlug);
+                if (existing && existing.code !== MiniChat.roomCode) {
+                    showError(`"${newSlug}" is already taken`);
+                    committed = false;
+                    return;
+                }
+                customSlug = newSlug;
                 saveSlug(customSlug, MiniChat.roomCode, pin || null);
+            } else {
+                customSlug = newSlug;
             }
+
             badgeEl.style.padding = '';
             badgeEl.style.background = '';
             badgeEl.style.border = '';
