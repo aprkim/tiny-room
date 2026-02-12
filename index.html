@@ -1134,6 +1134,26 @@ input::placeholder { color: var(--muted2); }
 <script type="module">
 import MiniChat from 'https://proto2.makedo.com:8883/v04/scripts/minichat-api.js';
 
+// ===== Firebase =====
+const FIREBASE_DB = 'https://tiny-room-3967e-default-rtdb.firebaseio.com';
+
+async function saveSlug(slug, roomCode) {
+    try {
+        await fetch(`${FIREBASE_DB}/slugs/${slug}.json`, {
+            method: 'PUT',
+            body: JSON.stringify(roomCode)
+        });
+    } catch (e) { console.warn('Failed to save slug:', e); }
+}
+
+async function lookupSlug(slug) {
+    try {
+        const res = await fetch(`${FIREBASE_DB}/slugs/${slug}.json`);
+        const code = await res.json();
+        return code || null;
+    } catch (e) { return null; }
+}
+
 // ===== State =====
 let isLeavingRoom = false;
 let localName = '';
@@ -1225,13 +1245,21 @@ const urlSlug = urlParams.get('slug');
 
 if (urlSlug) customSlug = urlSlug;
 
-// If slug + code both present, remember the mapping
+// If slug + code both present, save to Firebase
 if (urlSlug && urlCode) {
-    localStorage.setItem('slug:' + urlSlug, urlCode);
+    saveSlug(urlSlug, urlCode);
 }
-// If slug but no code, look up from saved mapping
+
+// If slug but no code, look up from Firebase
 if (urlSlug && !urlCode) {
-    urlCode = localStorage.getItem('slug:' + urlSlug);
+    lookupSlug(urlSlug).then(code => {
+        if (code) {
+            codeInput.value = code;
+            btnCreate.style.display = 'none';
+            document.querySelector('.entry-divider').style.display = 'none';
+            updateEntryButtons();
+        }
+    });
 }
 
 if (urlCode) {
@@ -1348,7 +1376,7 @@ function makeCodeBadgeEditable(badgeEl) {
             if (!badgeEl.contains(input)) return;
             customSlug = sanitizeSlug(input.value);
             if (customSlug && MiniChat.roomCode) {
-                localStorage.setItem('slug:' + customSlug, MiniChat.roomCode);
+                saveSlug(customSlug, MiniChat.roomCode);
             }
             badgeEl.style.padding = '';
             badgeEl.style.background = '';
