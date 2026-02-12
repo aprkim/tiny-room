@@ -1026,7 +1026,7 @@ input::placeholder { color: var(--muted2); }
 <!-- ===== Entry Screen ===== -->
 <div id="entryScreen" class="screen active">
     <div class="entry-header">
-        <h1>TinyRoom</h1>
+        <h1>TinyRoom<span id="slugTitle"></span></h1>
         <p>Video chat for up to 4 people</p>
     </div>
 
@@ -1260,6 +1260,8 @@ if (urlSlug) {
     customSlug = urlSlug;
     // Restore clean URL in address bar
     history.replaceState(null, '', '/in/' + urlSlug);
+    // Show slug name in header
+    document.getElementById('slugTitle').innerHTML = ': <span style="color:var(--accent)">' + urlSlug + '</span>';
 }
 
 // If slug + code both present, save to Firebase
