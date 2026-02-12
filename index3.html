@@ -1050,10 +1050,10 @@ input::placeholder { color: var(--muted2); }
         </div>
         <div id="pinSection" style="display:none;">
             <label for="pinInput">Enter PIN to join</label>
-            <input type="tel" id="pinInput" placeholder="PIN" maxlength="6" inputmode="numeric" pattern="[0-9]*" autocomplete="off" style="text-align:center;letter-spacing:0.3em;font-size:1.1rem;">
         </div>
         <div class="entry-join-row">
             <input type="text" id="codeInput" placeholder="E.G. ABC123" maxlength="12" autocomplete="off">
+            <input type="tel" id="pinInput" placeholder="PIN" maxlength="6" inputmode="numeric" pattern="[0-9]*" autocomplete="off" style="display:none;text-align:center;letter-spacing:0.2em;flex:0 0 35%;">
             <button id="btnJoin" class="btn-join btn-secondary" onclick="window.joinRoom()">Join</button>
         </div>
     </div>
@@ -1276,6 +1276,7 @@ function setupSlugJoin(code, pin) {
     if (pin) {
         requiredPin = pin;
         document.getElementById('pinSection').style.display = '';
+        document.getElementById('pinInput').style.display = '';
     }
     btnJoin.classList.remove('btn-secondary');
     btnJoin.classList.add('btn-primary');
