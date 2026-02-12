@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Redirecting...</title>
+  <script>
+    (function() {
+      var slug = window.location.pathname.replace(/^\/+|\/+$/g, '');
+      if (slug) {
+        var params = new URLSearchParams(window.location.search);
+        params.set('slug', slug);
+        window.location.replace('/' + '?' + params.toString());
+      } else {
+        window.location.replace('/' + window.location.search);
+      }
+    })();
+  </script>
+</head>
+<body></body>
+</html>

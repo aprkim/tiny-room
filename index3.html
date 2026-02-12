@@ -417,6 +417,30 @@ input::placeholder { color: var(--muted2); }
     border-radius: calc(var(--radius) * 0.4);
     background: var(--accentSoft);
     border: 1px solid var(--accentBorder);
+    cursor: pointer;
+    transition: background 0.15s, border-color 0.15s;
+}
+.topbar-code:hover {
+    background: var(--accentBorder);
+    border-color: var(--accent);
+}
+.topbar-code-edit {
+    font-size: 0.85rem;
+    color: var(--accent);
+    font-weight: 700;
+    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    letter-spacing: 0.04em;
+    padding: 0.2rem 0.5rem;
+    border-radius: calc(var(--radius) * 0.4);
+    background: var(--card);
+    border: 2px solid var(--accent);
+    outline: none;
+    min-width: 80px;
+    max-width: 200px;
+}
+.topbar-code-edit::placeholder {
+    color: var(--muted2);
+    font-weight: 500;
 }
 
 .topbar-btn {
@@ -1113,6 +1137,7 @@ import MiniChat from 'https://proto2.makedo.com:8883/v04/scripts/minichat-api.js
 // ===== State =====
 let isLeavingRoom = false;
 let localName = '';
+let customSlug = '';
 
 // ===== Init =====
 MiniChat.init({
@@ -1194,7 +1219,12 @@ function updateEntryButtons() {
     }
 }
 
-const urlCode = new URLSearchParams(window.location.search).get('code');
+const urlParams = new URLSearchParams(window.location.search);
+const urlCode = urlParams.get('code');
+const urlSlug = urlParams.get('slug');
+
+if (urlSlug) customSlug = urlSlug;
+
 if (urlCode) {
     codeInput.value = urlCode;
     // Hide "Start a Room" and divider when joining via link
@@ -1203,6 +1233,9 @@ if (urlCode) {
 }
 
 updateEntryButtons();
+
+makeCodeBadgeEditable(document.getElementById('preLiveCodeText'));
+makeCodeBadgeEditable(document.getElementById('liveCode'));
 
 // ===== Screen Navigation =====
 function showScreen(id) {
@@ -1250,14 +1283,83 @@ window.copyRawCode = (btn) => {
 
 window.copyLink = (btn) => {
     if (!MiniChat.roomCode) return;
-    const url = new URL(window.location.href);
-    url.searchParams.set('code', MiniChat.roomCode);
-    navigator.clipboard.writeText(url.toString()).then(() => {
+    const url = customSlug
+        ? window.location.origin + '/' + customSlug + '?code=' + MiniChat.roomCode
+        : window.location.origin + '/?code=' + MiniChat.roomCode;
+    navigator.clipboard.writeText(url).then(() => {
         if (btn) showCopiedTip(btn, 'Copied!');
     }).catch(() => {});
 };
 
 window.copyCode = window.copyLink;
+
+// ===== Custom Slug =====
+function sanitizeSlug(raw) {
+    return raw.toLowerCase().trim()
+        .replace(/\s+/g, '-')
+        .replace(/[^a-z0-9\-]/g, '')
+        .replace(/-{2,}/g, '-')
+        .replace(/^-+|-+$/g, '')
+        .substring(0, 48);
+}
+
+function updateAllCodeBadges() {
+    const displayText = customSlug || MiniChat.roomCode || '';
+    const preBadge = document.getElementById('preLiveCodeText');
+    const liveBadge = document.getElementById('liveCode');
+    preBadge.textContent = displayText;
+    liveBadge.textContent = displayText;
+    const tip = customSlug && MiniChat.roomCode
+        ? `${customSlug} (code: ${MiniChat.roomCode}) — click to edit`
+        : 'Click to set a custom room name';
+    preBadge.title = tip;
+    liveBadge.title = tip;
+}
+
+function makeCodeBadgeEditable(badgeEl) {
+    badgeEl.addEventListener('click', () => {
+        if (badgeEl.querySelector('input')) return;
+
+        const input = document.createElement('input');
+        input.type = 'text';
+        input.className = 'topbar-code-edit';
+        input.value = customSlug;
+        input.placeholder = MiniChat.roomCode || 'custom-name';
+        input.maxLength = 48;
+
+        badgeEl.textContent = '';
+        badgeEl.style.padding = '0';
+        badgeEl.style.background = 'none';
+        badgeEl.style.border = 'none';
+        badgeEl.appendChild(input);
+        input.focus();
+        input.select();
+
+        function commit() {
+            if (!badgeEl.contains(input)) return;
+            customSlug = sanitizeSlug(input.value);
+            badgeEl.style.padding = '';
+            badgeEl.style.background = '';
+            badgeEl.style.border = '';
+            updateAllCodeBadges();
+            showToast(customSlug
+                ? `Room slug set to "${customSlug}"`
+                : 'Using default room code');
+        }
+
+        input.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') { e.preventDefault(); commit(); }
+            if (e.key === 'Escape') {
+                e.preventDefault();
+                badgeEl.style.padding = '';
+                badgeEl.style.background = '';
+                badgeEl.style.border = '';
+                updateAllCodeBadges();
+            }
+        });
+        input.addEventListener('blur', commit);
+    });
+}
 
 // ===== Create Room =====
 window.createRoom = async () => {
@@ -1310,6 +1412,7 @@ window.togglePreMic = () => {
 // ===== Back to Entry =====
 window.backToEntry = () => {
     isLeavingRoom = true;
+    customSlug = '';
     MiniChat.exitRoom();
     document.getElementById('previewArea').innerHTML = '';
 
@@ -1369,6 +1472,7 @@ window.toggleLiveScreen = () => {
 // ===== Leave Room =====
 window.leaveRoom = () => {
     isLeavingRoom = true;
+    customSlug = '';
     MiniChat.exitRoom();
 
     document.getElementById('videoGrid').innerHTML = '';
@@ -1851,9 +1955,7 @@ function updateMemberIndicators(memberId, streamType) {
 
 // ===== Event Handlers =====
 MiniChat.on('channelSelected', async (channel) => {
-    const roomCode = MiniChat.roomCode;
-    document.getElementById('preLiveCodeText').textContent = roomCode;
-    document.getElementById('liveCode').textContent = roomCode;
+    updateAllCodeBadges();
 
     showScreen('preLiveScreen');
 
