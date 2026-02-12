@@ -1255,7 +1255,11 @@ const urlParams = new URLSearchParams(window.location.search);
 let urlCode = urlParams.get('code');
 const urlSlug = urlParams.get('slug');
 
-if (urlSlug) customSlug = urlSlug;
+if (urlSlug) {
+    customSlug = urlSlug;
+    // Restore clean URL in address bar
+    history.replaceState(null, '', '/in/' + urlSlug);
+}
 
 // If slug + code both present, save to Firebase
 if (urlSlug && urlCode) {
