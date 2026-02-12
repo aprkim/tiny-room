@@ -1046,15 +1046,15 @@ input::placeholder { color: var(--muted2); }
 
         <div id="codeSection">
             <label for="codeInput">Join with room code</label>
-            <div class="entry-join-row">
-                <input type="text" id="codeInput" placeholder="E.G. ABC123" maxlength="12" autocomplete="off">
-            </div>
         </div>
         <div id="pinSection" style="display:none;">
             <label for="pinInput">Enter PIN to join</label>
             <input type="tel" id="pinInput" placeholder="PIN" maxlength="6" inputmode="numeric" pattern="[0-9]*" autocomplete="off" style="text-align:center;letter-spacing:0.3em;font-size:1.1rem;">
         </div>
-        <button id="btnJoin" class="btn-join btn-secondary" onclick="window.joinRoom()">Join</button>
+        <div class="entry-join-row">
+            <input type="text" id="codeInput" placeholder="E.G. ABC123" maxlength="12" autocomplete="off">
+            <button id="btnJoin" class="btn-join btn-secondary" onclick="window.joinRoom()">Join</button>
+        </div>
     </div>
 </div>
 
@@ -1264,6 +1264,7 @@ if (urlSlug && urlCode) {
 // If slug but no code, look up from Firebase
 function setupSlugJoin(code, pin) {
     codeInput.value = code;
+    codeInput.style.display = 'none';
     btnCreate.style.display = 'none';
     document.querySelector('.entry-divider').style.display = 'none';
     document.getElementById('codeSection').style.display = 'none';
