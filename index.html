@@ -1148,6 +1148,17 @@ input::placeholder { color: var(--muted2); }
     </div>
 </div>
 
+<script>
+// Restore /in/slug URL before module loads (in case SDK fails)
+(function() {
+    var params = new URLSearchParams(window.location.search);
+    var slug = params.get('slug');
+    if (slug) {
+        history.replaceState(null, '', '/in/' + slug);
+    }
+})();
+</script>
+
 <script type="module">
 import VibeLive from 'https://makedo.com/sdk/vibelive-api.js';
 
@@ -1273,11 +1284,12 @@ function updateEntryButtons() {
 
 const urlParams = new URLSearchParams(window.location.search);
 let urlCode = urlParams.get('code');
-const urlSlug = urlParams.get('slug');
+// Read slug from query param OR from /in/slug path (already restored by early script)
+const urlSlug = urlParams.get('slug') || (window.location.pathname.match(/^\/in\/(.+)/) || [])[1];
 
 if (urlSlug) {
     customSlug = urlSlug;
-    // Restore clean URL in address bar
+    // Ensure clean URL in address bar
     history.replaceState(null, '', '/in/' + urlSlug);
     // Show slug name in header
     document.getElementById('slugTitle').innerHTML = ': <span style="color:var(--accent)">' + urlSlug + '</span>';
