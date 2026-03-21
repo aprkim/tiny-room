@@ -2223,6 +2223,14 @@ VibeLive.on('memberUpdate', (memberId) => {
         updateLocalControlUI();
     }
 
+    // Clean up tiles for members who exited (ghost prevention)
+    if (memberId !== VibeLive.memberId && member.displayStatus === 'EXITED') {
+        document.getElementById(`tile-${memberId}-camera`)?.remove();
+        document.getElementById(`tile-${memberId}-screenshare`)?.remove();
+        updateGridLayout();
+        return;
+    }
+
     updateMemberIndicators(memberId);
 });
 
