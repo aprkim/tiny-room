@@ -1673,6 +1673,9 @@ function createVideoTile(memberId, name, streamType, isLocal) {
     video.autoplay = true;
     video.playsInline = true;
     video.muted = (isLocal || streamType === 'screenshare');
+    if (isLocal && streamType === 'camera') {
+        video.style.transform = 'scaleX(-1)';
+    }
 
     videoContainer.appendChild(placeholder);
     videoContainer.appendChild(video);
