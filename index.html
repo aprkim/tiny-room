@@ -1160,7 +1160,7 @@ input::placeholder { color: var(--muted2); }
 </script>
 
 <script type="module">
-import VibeLive from 'https://makedo.com/sdk/vibelive-api.js';
+import VibeLive from 'https://makedo.com/sdk/makedo-vibelive.esm.js';
 
 // ===== Firebase =====
 const FIREBASE_DB = 'https://tiny-room-3967e-default-rtdb.firebaseio.com';
@@ -1204,7 +1204,7 @@ let requiredPin = null;
 
 // ===== Init =====
 VibeLive.init({
-    contextId: 'Kw6w6w6w6w',
+    projectId: 'Kw6w6w6w6w',
     projectKey: 'vlk_NPya24duyHAPChFiLO6qDNsp'
 });
 
@@ -1563,11 +1563,11 @@ window.joinRoom = async () => {
 
 // ===== Pre-Live Controls =====
 window.togglePreCam = () => {
-    VibeLive.toggleVideo();
+    VibeLive.setVideo(!VibeLive.mediaState.video);
 };
 
 window.togglePreMic = () => {
-    VibeLive.toggleAudio();
+    VibeLive.setAudio(!VibeLive.mediaState.audio);
 };
 
 // ===== Back to Entry =====
@@ -1599,14 +1599,14 @@ window.goLive = async () => {
 window.toggleLiveMic = () => {
     const s = VibeLive.mediaState;
     if (!s.audio) {
-        VibeLive.toggleAudio();
+        VibeLive.setAudio(true);
     } else {
-        VibeLive.toggleMuteAudio();
+        VibeLive.setAudioMuted(!s.audioMuted);
     }
 };
 
 window.toggleLiveCam = () => {
-    VibeLive.toggleVideo();
+    VibeLive.setVideo(!VibeLive.mediaState.video);
 };
 
 window.toggleLiveScreen = () => {
@@ -1623,7 +1623,7 @@ window.toggleLiveScreen = () => {
     }
 
     // Let localMediaChange handle showing/removing the tile
-    VibeLive.toggleScreenshare();
+    VibeLive.setScreenshare(!VibeLive.screenState.video);
 };
 
 // ===== Leave Room =====
@@ -2087,8 +2087,8 @@ function updateMemberIndicators(memberId, streamType) {
             micOn = s.audio && !s.audioMuted;
         } else {
             const states = VibeLive.getMediaStates(memberId);
-            camOn = states?.cam_video_detail === 'ON';
-            micOn = states?.cam_audio_detail === 'ON';
+            camOn = states?.videoDetail === 'ON';
+            micOn = states?.audioDetail === 'ON';
         }
 
         const camInd = camTile.querySelector('.cam-video');
@@ -2128,7 +2128,7 @@ function updateMemberIndicators(memberId, streamType) {
             screenOn = VibeLive.screenState.video;
         } else {
             const states = VibeLive.getMediaStates(memberId);
-            screenOn = states?.screen_video_detail === 'ON';
+            screenOn = states?.screenVideoDetail === 'ON';
         }
         const screenInd = screenTile.querySelector('.screen-video');
         if (screenInd) {
@@ -2157,8 +2157,8 @@ VibeLive.on('channelSelected', async (channel) => {
         }
     }
 
-    await VibeLive.toggleVideo();
-    await VibeLive.toggleAudio();
+    await VibeLive.setVideo(true);
+    await VibeLive.setAudio(true);
 });
 
 VibeLive.on('localJoined', async () => {
@@ -2214,6 +2214,29 @@ VibeLive.on('remoteLeft', (memberId) => {
         document.getElementById(`tile-${memberId}-camera`)?.remove();
         document.getElementById(`tile-${memberId}-screenshare`)?.remove();
         updateGridLayout();
+    }
+});
+
+VibeLive.on('memberStateChange', (memberId, state) => {
+    // Unified state handler — update indicators for any member
+    updateMemberIndicators(memberId);
+
+    // Update visibility based on state
+    const camTile = document.getElementById(`tile-${memberId}-camera`);
+    if (camTile) {
+        const videoOn = state.video === 'ON';
+        camTile.querySelector('.video-placeholder')?.classList.toggle('hidden', videoOn);
+        camTile.querySelector('video')?.classList.toggle('visible', videoOn);
+    }
+
+    const screenTile = document.getElementById(`tile-${memberId}-screenshare`);
+    if (screenTile) {
+        const screenOn = state.screenVideo !== 'OFF';
+        screenTile.style.display = screenOn ? 'flex' : 'none';
+    }
+
+    if (memberId === VibeLive.memberId) {
+        updateLocalControlUI();
     }
 });
 
@@ -2297,9 +2320,9 @@ VibeLive.on('remoteMediaChange', (memberId, streamType) => {
 
     let showPlaceholder = false;
     if (streamType === 'camera') {
-        showPlaceholder = states.cam_video_detail !== 'ON';
+        showPlaceholder = states.videoDetail !== 'ON';
     } else {
-        showPlaceholder = states.screen_video_detail !== 'ON';
+        showPlaceholder = states.screenVideoDetail !== 'ON';
     }
 
     if (showPlaceholder) {
@@ -2347,12 +2370,20 @@ VibeLive.on('localMediaChange', () => {
 });
 
 VibeLive.on('error', (context, error) => {
-    console.error('VibeLive error:', context, error);
-    showError(`Error: ${context}`);
+    console.error('VibeLive error:', context, error?.code || '', error?.message || error);
+    // Suppress non-critical media toggle errors from banner
+    if (['toggleVideo', 'toggleAudio', 'setVideo', 'setAudio'].includes(context)) {
+        return;
+    }
+    showError(error?.hint || error?.message || `Error: ${context}`);
+});
+
+VibeLive.on('warning', (context, message) => {
+    console.warn('VibeLive warning:', context, message);
 });
 
 VibeLive.on('kicked', (message) => {
-    // Server ended the meeting — don't call exitRoom(), SDK already cleaned up
+    VibeLive.exitRoom();
     document.getElementById('videoGrid').innerHTML = '';
     document.getElementById('previewArea').innerHTML = '';
     showScreen('entryScreen');
