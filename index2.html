@@ -1,0 +1,2437 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Tiny Room</title>
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect x='1' y='1' width='30' height='30' rx='7' fill='%230EA5A4'/%3E%3Crect x='5' y='5' width='9.5' height='9.5' rx='2.5' fill='white' opacity='0.9'/%3E%3Crect x='17.5' y='5' width='9.5' height='9.5' rx='2.5' fill='white' opacity='0.9'/%3E%3Crect x='5' y='17.5' width='9.5' height='9.5' rx='2.5' fill='white' opacity='0.9'/%3E%3Crect x='17.5' y='17.5' width='9.5' height='9.5' rx='2.5' fill='white' opacity='0.9'/%3E%3C/svg%3E">
+<style>
+/* ===== Reset & Base ===== */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+    --radius: 16px;
+    --max: 980px;
+    --sans: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial;
+
+    --bg: #f7f9f8;
+    --card: #ffffff;
+    --soft: #f0f4f3;
+    --border: #e2e8f0;
+    --borderSoft: #dbe2ea;
+
+    --text: #1e293b;
+    --muted: #64748b;
+    --muted2: #9ca3af;
+
+    --accent: #0EA5A4;
+    --accentHover: #0d9488;
+    --accentSoft: rgba(14,165,164,.10);
+    --accentBorder: rgba(14,165,164,.35);
+
+    --liveBg: #e8f4ed;
+    --liveBorder: #a6c5a3;
+    --liveText: #324252;
+
+    --disabledBg: #f3f4f6;
+    --disabledBorder: #e5e7eb;
+    --disabledText: #6b7280;
+
+    --dangerBg: #FEF2F2;
+    --dangerBorder: #fca5a5;
+    --dangerText: #b91c1c;
+
+    --overlay: rgba(30, 41, 59, 0.5);
+}
+
+[data-theme="dark"] {
+    --bg: #0f172a;
+    --card: #111827;
+    --soft: #1f2937;
+    --border: #273244;
+    --borderSoft: #334155;
+
+    --text: #e5e7eb;
+    --muted: #9ca3af;
+    --muted2: #6b7280;
+
+    --accent: #0EA5A4;
+    --accentHover: #14b8a6;
+    --accentSoft: rgba(14,165,164,.18);
+    --accentBorder: rgba(14,165,164,.45);
+
+    --liveBg: rgba(16,185,129,.15);
+    --liveBorder: rgba(16,185,129,.4);
+    --liveText: #a7f3d0;
+
+    --dangerBg: rgba(239,68,68,.15);
+    --dangerBorder: rgba(239,68,68,.4);
+    --dangerText: #fca5a5;
+
+    --overlay: rgba(0,0,0,0.6);
+}
+
+html, body {
+    height: 100%;
+    font-family: var(--sans);
+    background: var(--bg);
+    color: var(--text);
+    -webkit-font-smoothing: antialiased;
+}
+
+body {
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+button {
+    font-family: inherit;
+    cursor: pointer;
+    border: none;
+    outline: none;
+    font-size: 0.9rem;
+    font-weight: 500;
+    border-radius: calc(var(--radius) * 0.6);
+    padding: 0.6rem 1.2rem;
+    transition: background 0.15s, transform 0.1s, box-shadow 0.15s;
+}
+
+button:active { transform: scale(0.97); }
+
+input {
+    font-family: inherit;
+    font-size: 0.95rem;
+    padding: 0.65rem 0.9rem;
+    border: 1.5px solid var(--border);
+    border-radius: calc(var(--radius) * 0.6);
+    background: var(--soft);
+    color: var(--text);
+    outline: none;
+    width: 100%;
+    transition: border-color 0.15s;
+}
+
+input:focus { border-color: var(--accent); }
+input::placeholder { color: var(--muted2); }
+
+.screen { display: none; flex-direction: column; height: 100%; }
+.screen.active { display: flex; }
+
+/* ===== Entry Screen ===== */
+#entryScreen {
+    align-items: center;
+    justify-content: center;
+    gap: 1rem;
+    padding: 1.5rem;
+}
+
+.entry-header {
+    text-align: center;
+    margin-bottom: 0.5rem;
+}
+
+.entry-header h1 {
+    font-size: 1.6rem;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    color: var(--text);
+}
+
+.entry-header p {
+    color: var(--muted);
+    font-size: 0.85rem;
+    margin-top: 0.3rem;
+}
+
+.entry-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 1.25rem;
+    width: 100%;
+    max-width: 420px;
+}
+
+.entry-card label {
+    display: block;
+    font-size: 0.85rem;
+    font-weight: 500;
+    color: var(--muted);
+    margin-bottom: 0.45rem;
+}
+
+.entry-hint {
+    font-size: 0.75rem;
+    color: var(--dangerText);
+    margin-top: 0.35rem;
+    opacity: 0;
+    transition: opacity 0.15s;
+}
+
+.entry-hint.show { opacity: 1; }
+
+.btn-primary {
+    background: var(--accent);
+    color: #fff;
+    font-weight: 600;
+    width: 100%;
+    padding: 0.7rem;
+}
+
+.btn-primary:hover { background: var(--accentHover); }
+.btn-primary:disabled { cursor: not-allowed; }
+
+.btn-create {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.4rem;
+    padding: 0.85rem;
+    font-size: 1rem;
+}
+
+.entry-divider {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    margin: 1rem 0;
+    color: var(--muted2);
+    font-size: 0.75rem;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+}
+
+.entry-divider::before,
+.entry-divider::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: var(--border);
+}
+
+.entry-join-row {
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: nowrap;
+}
+
+.entry-join-row input { flex: 1; min-width: 0; }
+
+.entry-join-row .btn-join {
+    flex: 0 0 30% !important;
+    width: auto !important;
+    border-radius: calc(var(--radius) * 0.5);
+    padding: 0.6rem 0;
+    font-size: 0.9rem;
+    white-space: nowrap;
+}
+
+.btn-secondary {
+    background: var(--soft);
+    color: var(--text);
+    border: 1px solid var(--border);
+    width: 100%;
+    padding: 0.7rem;
+    font-weight: 600;
+}
+
+.btn-secondary:hover { background: var(--border); }
+.btn-secondary:disabled { cursor: not-allowed; }
+
+.theme-toggle {
+    position: fixed;
+    bottom: 1rem;
+    right: 1rem;
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: calc(var(--radius) * 0.6);
+    padding: 0.45rem 0.65rem;
+    font-size: 1rem;
+    color: var(--text);
+    z-index: 100;
+    display: flex;
+    align-items: center;
+    gap: 0.35rem;
+}
+
+.theme-toggle:hover { background: var(--soft); }
+
+/* ===== Pre-Live Screen ===== */
+#preLiveScreen {
+    align-items: center;
+    padding: 0;
+}
+
+#preLiveScreen .live-topbar {
+    align-self: stretch;
+    flex-shrink: 0;
+}
+
+#preLiveScreen .prelive-heading {
+    font-size: 1.2rem;
+    font-weight: 600;
+    text-align: center;
+    margin: 0;
+}
+
+.prelive-content {
+    flex: 1;
+    align-self: stretch;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 1.5rem;
+    gap: 0.5rem;
+}
+
+.prelive-preview {
+    width: min(70%, calc((100vh - 160px) * 16 / 9 * 0.7));
+    max-width: 840px;
+    position: relative;
+    border-radius: var(--radius);
+    overflow: hidden;
+    background: var(--soft);
+    border: 1px solid var(--border);
+}
+
+.prelive-preview::before {
+    content: '';
+    display: block;
+    padding-top: 56.25%;
+}
+
+#previewArea {
+    position: absolute;
+    inset: 0;
+}
+
+#previewArea .video-tile {
+    width: 100%;
+    height: 100%;
+    border-radius: 0;
+    border: none;
+}
+
+#previewArea .drag-handle,
+#previewArea .resize-handle { display: none; }
+
+.prelive-notice {
+    text-align: center;
+    font-size: 0.78rem;
+    color: var(--muted);
+    margin-top: 0.75rem;
+}
+
+.prelive-controls {
+    display: flex;
+    gap: 0.6rem;
+    margin-top: 1rem;
+    justify-content: center;
+}
+
+.ctrl-btn {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    background: var(--card);
+    border: 1.5px solid var(--border);
+    color: var(--text);
+    transition: background 0.15s, border-color 0.15s, color 0.15s;
+}
+
+.ctrl-btn:hover { background: var(--soft); }
+.ctrl-btn.active { background: var(--accentSoft); border-color: var(--accentBorder); color: var(--accent); }
+.ctrl-btn.off { background: var(--dangerBg); border-color: var(--dangerBorder); color: var(--dangerText); }
+
+.ctrl-btn svg, .theme-toggle svg { width: 20px; height: 20px; display: block; }
+.indicator svg { width: 14px; height: 14px; display: block; }
+.video-placeholder .ph-icon svg { width: 28px; height: 28px; }
+
+.prelive-actions {
+    display: flex;
+    gap: 0.75rem;
+    margin-top: 1.2rem;
+    max-width: 360px;
+    width: 100%;
+}
+
+.prelive-go {
+    flex: 1;
+}
+
+.prelive-back {
+    flex: 0 0 auto;
+    padding: 0.65rem 1.2rem;
+    border-radius: var(--radius);
+    border: 1px solid var(--border);
+    background: var(--soft);
+    color: var(--text);
+    font-size: 0.95rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.15s, border-color 0.15s;
+}
+.prelive-back:hover {
+    background: var(--border);
+}
+
+/* ===== Live Room ===== */
+#liveScreen {
+    flex: 1;
+    overflow: hidden;
+}
+
+.live-topbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.5rem 1rem;
+    border-bottom: 1px solid var(--border);
+    background: var(--card);
+    min-height: 48px;
+    flex-shrink: 0;
+}
+
+.live-topbar h3 {
+    font-size: 0.95rem;
+    font-weight: 600;
+}
+
+.topbar-right {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+}
+
+.topbar-code {
+    font-size: 0.85rem;
+    color: var(--accent);
+    font-weight: 700;
+    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    letter-spacing: 0.04em;
+    padding: 0.25rem 0.6rem;
+    border-radius: calc(var(--radius) * 0.4);
+    background: var(--accentSoft);
+    border: 1px solid var(--accentBorder);
+    cursor: pointer;
+    transition: background 0.15s, border-color 0.15s;
+}
+.topbar-code:hover {
+    background: var(--accentBorder);
+    border-color: var(--accent);
+}
+.topbar-code-edit {
+    font-size: 0.85rem;
+    color: var(--accent);
+    font-weight: 700;
+    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    letter-spacing: 0.04em;
+    padding: 0.2rem 0.5rem;
+    border-radius: calc(var(--radius) * 0.4);
+    background: var(--card);
+    border: 2px solid var(--accent);
+    outline: none;
+    min-width: 80px;
+    max-width: 200px;
+}
+.topbar-code-edit::placeholder {
+    color: var(--muted2);
+    font-weight: 500;
+}
+
+.topbar-btn {
+    width: 34px;
+    height: 34px;
+    border-radius: calc(var(--radius) * 0.4);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    background: var(--soft);
+    border: 1px solid var(--border);
+    color: var(--muted);
+    transition: background 0.15s, color 0.15s;
+}
+
+.topbar-btn { position: relative; }
+.topbar-btn svg { width: 16px; height: 16px; display: block; }
+.topbar-btn:hover { background: var(--border); color: var(--text); }
+
+.topbar-btn .copied-tip {
+    position: absolute;
+    top: calc(100% + 6px);
+    left: 50%;
+    transform: translateX(-50%);
+    background: var(--text);
+    color: var(--bg);
+    font-size: 0.65rem;
+    font-weight: 600;
+    padding: 0.2rem 0.45rem;
+    border-radius: 4px;
+    white-space: nowrap;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.15s;
+    z-index: 20;
+}
+
+.topbar-btn .copied-tip.show { opacity: 1; }
+
+.live-body {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+/* ===== Video Grid ===== */
+#videoGrid {
+    flex: 1;
+    display: grid;
+    gap: 8px;
+    padding: 8px;
+    align-content: center;
+    overflow: hidden;
+    position: relative;
+    transition: grid-template-columns 0.25s ease, grid-template-rows 0.25s ease;
+}
+
+/* Grid layouts based on tile count */
+#videoGrid.grid-1 { grid-template-columns: 1fr; place-items: center; }
+#videoGrid.grid-1 .video-tile { width: min(100%, calc((100vh - 140px) * 16 / 9)); }
+#videoGrid.grid-2 { grid-template-columns: 1fr 1fr; width: 100%; }
+#videoGrid.grid-3 { grid-template-columns: 1fr 1fr 1fr; width: 100%; }
+#videoGrid.grid-4 { grid-template-columns: 1fr 1fr; width: 100%; }
+
+/* 5 tiles: 3 + 2 centered — use 6-column sub-grid */
+#videoGrid.grid-5 { grid-template-columns: repeat(6, 1fr); width: 100%; }
+#videoGrid.grid-5 .video-tile { grid-column: span 2; }
+#videoGrid.grid-5 .video-tile:nth-child(4) { grid-column: 2 / span 2; }
+
+/* 6 tiles: 3 × 2 */
+#videoGrid.grid-6 { grid-template-columns: 1fr 1fr 1fr; width: 100%; }
+
+/* 7 tiles: 4 + 3 centered — use 8-column sub-grid */
+#videoGrid.grid-7 { grid-template-columns: repeat(8, 1fr); width: 100%; }
+#videoGrid.grid-7 .video-tile { grid-column: span 2; }
+#videoGrid.grid-7 .video-tile:nth-child(5) { grid-column: 2 / span 2; }
+
+/* 8 tiles: 4 × 2 */
+#videoGrid.grid-8 { grid-template-columns: 1fr 1fr 1fr 1fr; width: 100%; }
+
+/* Screenshare tiles span 2 columns */
+#videoGrid .video-tile[data-stream-type="screenshare"] {
+    grid-column: span 2;
+}
+
+/* ===== Video Tile ===== */
+.video-tile {
+    position: relative;
+    border-radius: var(--radius);
+    overflow: hidden;
+    background: var(--soft);
+    border: 1px solid var(--border);
+    transition: transform 0.2s ease, opacity 0.2s ease;
+}
+
+.video-tile::before {
+    content: '';
+    display: block;
+    padding-top: 56.25%;
+}
+
+.video-container {
+    position: absolute;
+    inset: 0;
+}
+
+.video-placeholder {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--soft);
+    z-index: 1;
+}
+
+.video-placeholder.hidden { display: none; }
+
+.video-placeholder span,
+.video-placeholder .ph-icon {
+    font-size: 1.6rem;
+    font-weight: 700;
+    color: var(--muted);
+    width: 64px;
+    height: 64px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    background: var(--border);
+    text-transform: uppercase;
+}
+
+.video-container video {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: none;
+    z-index: 2;
+}
+
+.video-container video.visible { display: block; }
+
+/* Hide browser-native video controls overlay (Chrome play/pause hover) */
+.video-container video::-webkit-media-controls { display: none !important; }
+.video-container video::-webkit-media-controls-enclosure { display: none !important; }
+.video-container video::-webkit-media-controls-panel { display: none !important; }
+
+.member-info {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.4rem 0.6rem;
+    background: linear-gradient(transparent, rgba(0,0,0,0.55));
+    z-index: 5;
+    pointer-events: none;
+}
+
+.member-name {
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: #fff;
+    text-shadow: 0 1px 2px rgba(0,0,0,0.4);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 60%;
+}
+
+.member-indicators {
+    display: flex;
+    align-items: center;
+    gap: 0.35rem;
+}
+
+.indicator {
+    display: flex;
+    align-items: center;
+    padding: 0.15rem;
+    border-radius: 4px;
+    color: var(--accent);
+    background: rgba(14,165,164,.25);
+}
+
+.member-info .indicator {
+    color: #fff;
+    background: rgba(14,165,164,.7);
+}
+
+.indicator.off {
+    color: var(--dangerText);
+    background: rgba(239,68,68,.25);
+}
+
+.member-info .indicator.off {
+    color: #fff;
+    background: rgba(239,68,68,.7);
+}
+
+.status-badge {
+    font-size: 0.55rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    padding: 0.1rem 0.35rem;
+    border-radius: 999px;
+    display: none;
+}
+
+.status-badge.pre-live {
+    display: inline-block;
+    background: rgba(251,191,36,0.25);
+    color: #fbbf24;
+}
+
+.status-badge.live {
+    display: inline-block;
+    background: var(--liveBg);
+    color: var(--liveText);
+    border: 1px solid var(--liveBorder);
+}
+
+/* ===== Tile Actions (fullscreen, etc.) ===== */
+.tile-actions {
+    position: absolute;
+    top: 0.5rem;
+    right: 0.5rem;
+    display: flex;
+    gap: 0.3rem;
+    z-index: 10;
+    opacity: 0;
+    transition: opacity 0.2s ease;
+    pointer-events: none;
+}
+
+.video-tile:hover .tile-actions,
+.video-tile:focus-within .tile-actions {
+    opacity: 1;
+    pointer-events: auto;
+}
+
+.tile-action-btn {
+    width: 32px;
+    height: 32px;
+    border-radius: calc(var(--radius) * 0.4);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    background: rgba(0, 0, 0, 0.5);
+    backdrop-filter: blur(4px);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    color: #fff;
+    cursor: pointer;
+    transition: background 0.15s, transform 0.1s;
+}
+
+.tile-action-btn:hover { background: rgba(0, 0, 0, 0.7); }
+.tile-action-btn:active { transform: scale(0.93); }
+.tile-action-btn svg { width: 16px; height: 16px; display: block; }
+
+/* Fullscreen tile overrides */
+.video-tile:fullscreen,
+.video-tile:-webkit-full-screen {
+    border-radius: 0;
+    border: none;
+    background: #000;
+}
+
+.video-tile:fullscreen .tile-actions,
+.video-tile:-webkit-full-screen .tile-actions {
+    opacity: 0;
+    transition: opacity 0.3s ease 1s;
+}
+
+.video-tile:fullscreen:hover .tile-actions,
+.video-tile:-webkit-full-screen:hover .tile-actions {
+    opacity: 1;
+    transition: opacity 0.2s ease;
+}
+
+.video-tile:fullscreen::before,
+.video-tile:-webkit-full-screen::before {
+    display: none;
+}
+
+.video-tile:fullscreen .video-container video,
+.video-tile:-webkit-full-screen .video-container video {
+    object-fit: contain;
+}
+
+/* ===== Drag Handle ===== */
+.drag-handle {
+    position: absolute;
+    top: 0.5rem;
+    left: 0.5rem;
+    z-index: 10;
+    opacity: 0;
+    transition: opacity 0.2s ease;
+    pointer-events: none;
+    cursor: grab;
+}
+
+.video-tile:hover .drag-handle {
+    opacity: 1;
+    pointer-events: auto;
+}
+
+.drag-handle:active { cursor: grabbing; }
+
+.video-tile.tile-dragging {
+    z-index: 50;
+    opacity: 0.85;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.25);
+    transition: none;
+}
+
+.video-tile.tile-dragged {
+    position: absolute;
+    transition: none;
+}
+
+/* ===== Resize Handle ===== */
+.resize-handle {
+    position: absolute;
+    bottom: 0;
+    right: 0;
+    width: 20px;
+    height: 20px;
+    z-index: 10;
+    cursor: nwse-resize;
+    opacity: 0;
+    transition: opacity 0.2s ease;
+}
+
+.video-tile:hover .resize-handle { opacity: 1; }
+
+.resize-handle::before {
+    content: '';
+    position: absolute;
+    bottom: 4px;
+    right: 4px;
+    width: 10px;
+    height: 10px;
+    border-right: 2px solid rgba(255, 255, 255, 0.5);
+    border-bottom: 2px solid rgba(255, 255, 255, 0.5);
+}
+
+.video-tile.tile-resized::before { display: none; }
+.video-tile.tile-resizing { z-index: 50; transition: none; }
+
+/* ===== Presentation Mode (screenshare active) ===== */
+#videoGrid.presentation {
+    grid-template-columns: 1fr;
+    grid-template-rows: 1fr auto;
+    place-items: center;
+    transition: grid-template-rows 0.3s ease;
+}
+
+/* Screenshare area: holds one or more screenshare tiles side by side */
+.screenshare-area {
+    grid-column: 1;
+    grid-row: 1;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 8px;
+    width: 100%;
+    height: 100%;
+    min-height: 0;
+}
+
+.screenshare-area .video-tile {
+    flex: 1;
+    min-width: 0;
+    max-width: min(100%, calc((100vh - 220px) * 16 / 9));
+    max-height: 100%;
+}
+
+/* Letterboxing for screenshare — content, not cropped */
+.screenshare-area .video-tile .video-container video {
+    object-fit: contain;
+    background: #000;
+}
+
+/* Screen share tile semantics: no name, no indicators */
+.screenshare-area .video-tile .member-info {
+    display: none;
+}
+
+/* Spotlighted camera tiles in featured area: keep camera behavior */
+.screenshare-area .video-tile.tile-spotlighted .video-container video {
+    object-fit: cover;
+    background: var(--soft);
+}
+
+.screenshare-area .video-tile.tile-spotlighted .member-info {
+    display: flex;
+}
+
+/* Spotlight active indicator */
+.video-tile.tile-spotlighted {
+    border: 2px solid var(--accent);
+}
+
+.video-tile.tile-spotlighted .spotlight-btn {
+    background: var(--accent);
+}
+
+/* Camera strip: grid row below screenshare */
+.camera-strip {
+    grid-column: 1;
+    grid-row: 2;
+    display: flex;
+    justify-content: center;
+    gap: 8px;
+    padding: 8px 0 0;
+    overflow-x: auto;
+    width: 100%;
+}
+
+.camera-strip .video-tile {
+    flex: 0 0 180px;
+    width: 180px;
+}
+
+#videoGrid.presentation .video-tile[data-stream-type="camera"].tile-dragged {
+    z-index: 20;
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.3);
+    border: 2px solid var(--border);
+}
+
+/* Reset layout button */
+.reset-layout-btn { display: none; }
+.reset-layout-btn.visible { display: flex; }
+
+/* ===== Controls Bar ===== */
+.controls-bar {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.6rem;
+    padding: 0.7rem 1rem;
+    background: var(--card);
+    border-top: 1px solid var(--border);
+    flex-shrink: 0;
+}
+
+.controls-bar .ctrl-btn { width: 50px; height: 50px; }
+.controls-bar .ctrl-btn svg { width: 22px; height: 22px; }
+
+.ctrl-btn.leave {
+    background: var(--dangerBg);
+    border-color: var(--dangerBorder);
+    color: var(--dangerText);
+    margin-left: 1rem;
+}
+
+.ctrl-btn.leave:hover { background: var(--dangerBorder); }
+
+.controls-divider {
+    width: 1px;
+    height: 30px;
+    background: var(--border);
+    margin: 0 0.3rem;
+}
+
+/* ===== Toast ===== */
+.toast {
+    position: fixed;
+    bottom: 5rem;
+    left: 50%;
+    transform: translateX(-50%) translateY(10px);
+    background: var(--card);
+    color: var(--text);
+    border: 1px solid var(--border);
+    padding: 0.5rem 1rem;
+    border-radius: var(--radius);
+    font-size: 0.82rem;
+    font-weight: 500;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.2s, transform 0.2s;
+    z-index: 200;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.12);
+}
+
+.toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+/* ===== Error Banner ===== */
+.error-banner {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    background: var(--dangerBg);
+    color: var(--dangerText);
+    border-bottom: 1px solid var(--dangerBorder);
+    padding: 0.5rem 1rem;
+    font-size: 0.82rem;
+    text-align: center;
+    z-index: 300;
+    display: none;
+}
+
+.error-banner.show { display: block; }
+
+/* ===== Loading Spinner ===== */
+.spinner {
+    display: inline-block;
+    width: 16px;
+    height: 16px;
+    border: 2px solid var(--border);
+    border-top-color: var(--accent);
+    border-radius: 50%;
+    animation: spin 0.6s linear infinite;
+    vertical-align: middle;
+    margin-right: 0.4rem;
+}
+
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* ===== Responsive ===== */
+/* 3-tile fallback: 2 + 1 centered when 1×3 would be too cramped */
+@media (min-width: 641px) and (max-width: 768px) {
+    #videoGrid.grid-3 { grid-template-columns: repeat(4, 1fr); }
+    #videoGrid.grid-3 .video-tile { grid-column: span 2; }
+    #videoGrid.grid-3 .video-tile:nth-child(3) { grid-column: 2 / span 2; }
+}
+
+@media (max-width: 640px) {
+    #videoGrid.grid-2 { grid-template-columns: 1fr; }
+    #videoGrid.grid-3 { grid-template-columns: 1fr; }
+    #videoGrid.grid-4,
+    #videoGrid.grid-6,
+    #videoGrid.grid-8 { grid-template-columns: 1fr 1fr; }
+    #videoGrid.grid-5 { grid-template-columns: 1fr 1fr; }
+    #videoGrid.grid-5 .video-tile { grid-column: span 1; }
+    #videoGrid.grid-5 .video-tile:nth-child(4) { grid-column: auto; }
+    #videoGrid.grid-7 { grid-template-columns: 1fr 1fr; }
+    #videoGrid.grid-7 .video-tile { grid-column: span 1; }
+    #videoGrid.grid-7 .video-tile:nth-child(5) { grid-column: auto; }
+    #videoGrid .video-tile[data-stream-type="screenshare"] { grid-column: span 1; }
+    .screenshare-area { flex-direction: column; }
+    .screenshare-area .video-tile { flex: none; width: 100%; }
+    .camera-strip .video-tile { flex: 0 0 120px; width: 120px; }
+
+    .controls-bar { padding: 0.5rem; gap: 0.4rem; }
+    .controls-bar .ctrl-btn { width: 44px; height: 44px; }
+    .controls-bar .ctrl-btn svg { width: 20px; height: 20px; }
+    .ctrl-btn.leave { margin-left: 0.5rem; }
+}
+
+/* ===== Reduced Motion ===== */
+@media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { transition-duration: 0.01ms !important; animation-duration: 0.01ms !important; }
+}
+</style>
+</head>
+<body>
+
+<!-- Theme Toggle -->
+<button class="theme-toggle" onclick="window.toggleTheme()" title="Toggle theme">
+    <span id="themeIcon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg></span>
+</button>
+
+<!-- Error Banner -->
+<div id="errorBanner" class="error-banner"></div>
+
+<!-- Toast -->
+<div id="toast" class="toast"></div>
+
+<!-- ===== Entry Screen ===== -->
+<div id="entryScreen" class="screen active">
+    <div class="entry-header">
+        <h1>TinyRoom<span id="slugTitle"></span></h1>
+        <p>Video chat for up to 4 people</p>
+    </div>
+
+    <div class="entry-card">
+        <label for="nameInput">Your name</label>
+        <input type="text" id="nameInput" placeholder="Enter your name" maxlength="24" autocomplete="off" autofocus>
+        <div id="nameHint" class="entry-hint">Please enter your name first</div>
+    </div>
+
+    <div class="entry-card">
+        <button id="btnCreate" class="btn-primary btn-create" onclick="window.createRoom()">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="width:18px;height:18px;"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            Start a Room
+        </button>
+
+        <div class="entry-divider">
+            <span>OR</span>
+        </div>
+
+        <div id="codeSection">
+            <label for="codeInput">Join with room code</label>
+        </div>
+        <div id="pinSection" style="display:none;">
+            <label for="pinInput">Enter PIN to join</label>
+        </div>
+        <div class="entry-join-row">
+            <input type="text" id="codeInput" placeholder="E.G. ABC123" maxlength="12" autocomplete="off">
+            <input type="tel" id="pinInput" placeholder="PIN" maxlength="6" inputmode="numeric" pattern="[0-9]*" autocomplete="off" style="display:none;text-align:center;letter-spacing:0.2em;flex:0 0 70%;">
+            <button id="btnJoin" class="btn-join btn-secondary" onclick="window.joinRoom()">Join</button>
+        </div>
+    </div>
+</div>
+
+<!-- ===== Pre-Live Screen ===== -->
+<div id="preLiveScreen" class="screen">
+    <div class="live-topbar">
+        <h3>TinyRoom</h3>
+        <div class="topbar-right">
+            <span class="topbar-code" id="preLiveCodeText"></span>
+            <button class="topbar-btn" onclick="window.copyRawCode(this)" title="Copy room code">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+            </button>
+            <button class="topbar-btn" onclick="window.copyLink(this)" title="Copy invite link">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
+            </button>
+        </div>
+    </div>
+    <div class="prelive-content">
+        <h2 class="prelive-heading">Get Ready</h2>
+
+        <div class="prelive-preview">
+            <div id="previewArea"></div>
+        </div>
+
+        <div class="prelive-notice">You are not live yet — only you can see this preview</div>
+
+        <div class="prelive-controls">
+            <button class="ctrl-btn active" id="preCamBtn" onclick="window.togglePreCam()" title="Camera">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 7l-7 5 7 5V7z"/><rect x="1" y="5" width="15" height="14" rx="2" ry="2"/></svg>
+            </button>
+            <button class="ctrl-btn active" id="preMicBtn" onclick="window.togglePreMic()" title="Microphone">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg>
+            </button>
+        </div>
+
+        <div class="prelive-actions">
+            <button class="prelive-back" onclick="window.backToEntry()">Back</button>
+            <button class="btn-primary prelive-go" onclick="window.goLive()">Go Live</button>
+        </div>
+    </div>
+</div>
+
+<!-- ===== Live Screen ===== -->
+<div id="liveScreen" class="screen">
+    <div class="live-topbar">
+        <h3>TinyRoom</h3>
+        <div class="topbar-right">
+            <span class="topbar-code" id="liveCode"></span>
+            <button class="topbar-btn" onclick="window.copyRawCode(this)" title="Copy room code">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+            </button>
+            <button class="topbar-btn" onclick="window.copyLink(this)" title="Copy invite link">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
+            </button>
+            <button class="topbar-btn reset-layout-btn" id="resetLayoutBtn" onclick="window.resetTileLayout()" title="Reset tile layout">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+            </button>
+        </div>
+    </div>
+
+    <div class="live-body">
+        <div id="videoGrid"></div>
+    </div>
+
+    <div class="controls-bar">
+        <button class="ctrl-btn active" id="liveMicBtn" onclick="window.toggleLiveMic()" title="Microphone">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg>
+        </button>
+        <button class="ctrl-btn active" id="liveCamBtn" onclick="window.toggleLiveCam()" title="Camera">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 7l-7 5 7 5V7z"/><rect x="1" y="5" width="15" height="14" rx="2" ry="2"/></svg>
+        </button>
+        <div class="controls-divider"></div>
+        <button class="ctrl-btn" id="liveScreenBtn" onclick="window.toggleLiveScreen()" title="Screen Share">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
+        </button>
+        <div class="controls-divider"></div>
+        <button class="ctrl-btn leave" onclick="window.leaveRoom()" title="Leave Room">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+        </button>
+    </div>
+</div>
+
+<!-- Kicked Modal -->
+<div id="kickedOverlay" style="display:none; position:fixed; inset:0; background:var(--overlay); z-index:9999; align-items:center; justify-content:center;">
+    <div style="background:var(--card); border-radius:16px; padding:28px 24px 20px; max-width:340px; width:90%; box-shadow:0 8px 32px rgba(0,0,0,.18); text-align:center;">
+        <div style="font-size:14px; font-weight:600; color:var(--text); margin-bottom:16px;" id="kickedTitle">Session ended</div>
+        <div style="font-size:13px; color:var(--muted); line-height:1.5; margin-bottom:24px; white-space:pre-line;" id="kickedMessage"></div>
+        <button onclick="closeKickedModal()" style="background:var(--accent); color:#fff; border:none; border-radius:10px; padding:10px 32px; font-size:14px; font-weight:600; cursor:pointer;">OK</button>
+    </div>
+</div>
+
+<script>
+// Restore /in/slug URL before module loads (in case SDK fails)
+(function() {
+    var params = new URLSearchParams(window.location.search);
+    var slug = params.get('slug');
+    if (slug) {
+        history.replaceState(null, '', '/in/' + slug);
+    }
+})();
+</script>
+
+<script type="module">
+import VibeLive from 'https://makedo.com/sdk/makedo-vibelive.esm.js';
+
+// ===== Firebase =====
+const FIREBASE_DB = 'https://tiny-room-3967e-default-rtdb.firebaseio.com';
+
+async function saveSlug(slug, roomCode, pin) {
+    try {
+        const data = pin ? { code: roomCode, pin } : { code: roomCode };
+        await fetch(`${FIREBASE_DB}/slugs/${slug}.json`, {
+            method: 'PUT',
+            body: JSON.stringify(data)
+        });
+    } catch (e) { console.warn('Failed to save slug:', e); }
+}
+
+async function lookupSlug(slug) {
+    try {
+        const res = await fetch(`${FIREBASE_DB}/slugs/${slug}.json`);
+        const data = await res.json();
+        if (!data) return null;
+        // Support old format (plain string) and new format (object)
+        if (typeof data === 'string') return { code: data, pin: null };
+        return { code: data.code, pin: data.pin || null };
+    } catch (e) { return null; }
+}
+
+// ===== Media Icon SVGs =====
+const ICONS = {
+    camOn:    '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 7l-7 5 7 5V7z"/><rect x="1" y="5" width="15" height="14" rx="2" ry="2"/></svg>',
+    camOff:   '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 16v1a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2h2m5.66 0H14a2 2 0 0 1 2 2v3.34l1 1L23 7v10"/><line x1="1" y1="1" x2="23" y2="23"/></svg>',
+    micOn:    '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg>',
+    micOff:   '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="1" y1="1" x2="23" y2="23"/><path d="M9 9v3a3 3 0 0 0 5.12 2.12M15 9.34V4a3 3 0 0 0-5.94-.6"/><path d="M17 16.95A7 7 0 0 1 5 12v-2m14 0v2c0 .76-.13 1.49-.35 2.17"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg>',
+    screenOn: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>',
+    screenOff:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/><line x1="2" y1="2" x2="22" y2="18"/></svg>',
+};
+
+// ===== State =====
+let isLeavingRoom = false;
+let localName = '';
+let customSlug = '';
+let requiredPin = null;
+
+// ===== Init =====
+VibeLive.init({
+    projectId: 'Kw6w6w6w6w',
+    projectKey: 'vlk_NPya24duyHAPChFiLO6qDNsp'
+});
+
+function initTheme() {
+    const saved = localStorage.getItem('tinyroom-theme');
+    if (saved) {
+        document.documentElement.setAttribute('data-theme', saved);
+    } else if (window.matchMedia('(prefers-color-scheme: light)').matches) {
+        document.documentElement.setAttribute('data-theme', 'light');
+    }
+    updateThemeIcon();
+}
+
+function updateThemeIcon() {
+    const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+    document.getElementById('themeIcon').innerHTML = isDark
+        ? '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>'
+        : '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>';
+}
+
+window.toggleTheme = () => {
+    const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+    const next = isDark ? 'light' : 'dark';
+    document.documentElement.setAttribute('data-theme', next);
+    localStorage.setItem('tinyroom-theme', next);
+    updateThemeIcon();
+};
+
+initTheme();
+
+// ===== Entry Screen Logic =====
+const codeInput = document.getElementById('codeInput');
+const nameInput = document.getElementById('nameInput');
+const btnCreate = document.getElementById('btnCreate');
+const btnJoin = document.getElementById('btnJoin');
+
+const nameHint = document.getElementById('nameHint');
+let nameHintTimer = null;
+
+codeInput.addEventListener('input', updateEntryButtons);
+nameInput.addEventListener('input', () => {
+    updateEntryButtons();
+    if (nameInput.value.trim().length > 0) {
+        nameHint.classList.remove('show');
+    }
+});
+
+document.getElementById('entryScreen').addEventListener('pointerdown', (e) => {
+    const btn = e.target.closest('button');
+    if (btn && btn.disabled && !nameInput.value.trim()) {
+        nameHint.classList.add('show');
+        nameInput.focus();
+        clearTimeout(nameHintTimer);
+        nameHintTimer = setTimeout(() => nameHint.classList.remove('show'), 3000);
+    }
+});
+
+function updateEntryButtons() {
+    const hasCode = codeInput.value.trim().length > 0;
+    const hasName = nameInput.value.trim().length > 0;
+
+    btnCreate.disabled = !hasName;
+    btnJoin.disabled = !(hasName && hasCode);
+
+    if (hasCode) {
+        btnCreate.classList.remove('btn-primary');
+        btnCreate.classList.add('btn-secondary');
+        btnJoin.classList.remove('btn-secondary');
+        btnJoin.classList.add('btn-primary');
+    } else {
+        btnCreate.classList.remove('btn-secondary');
+        btnCreate.classList.add('btn-primary');
+        btnJoin.classList.remove('btn-primary');
+        btnJoin.classList.add('btn-secondary');
+    }
+}
+
+const urlParams = new URLSearchParams(window.location.search);
+let urlCode = urlParams.get('code');
+// Read slug from query param OR from /in/slug path (already restored by early script)
+const urlSlug = urlParams.get('slug') || (window.location.pathname.match(/^\/in\/(.+)/) || [])[1];
+
+if (urlSlug) {
+    customSlug = urlSlug;
+    // Ensure clean URL in address bar
+    history.replaceState(null, '', '/in/' + urlSlug);
+    // Show slug name in header
+    document.getElementById('slugTitle').innerHTML = ': <span style="color:var(--accent)">' + urlSlug + '</span>';
+}
+
+// If slug + code both present, save to Firebase
+if (urlSlug && urlCode) {
+    saveSlug(urlSlug, urlCode);
+}
+
+// Slug join: hide code input, show PIN if needed
+function setupSlugJoin(code, pin) {
+    codeInput.value = code;
+    codeInput.style.display = 'none';
+    btnCreate.style.display = 'none';
+    document.querySelector('.entry-divider').style.display = 'none';
+    document.getElementById('codeSection').style.display = 'none';
+    if (pin) {
+        requiredPin = pin;
+        document.getElementById('pinSection').style.display = '';
+        document.getElementById('pinInput').style.display = '';
+    }
+    btnJoin.classList.remove('btn-secondary');
+    btnJoin.classList.add('btn-primary');
+    updateEntryButtons();
+}
+
+if (urlSlug && !urlCode) {
+    lookupSlug(urlSlug).then(data => {
+        if (data) setupSlugJoin(data.code, data.pin);
+    });
+}
+
+// Direct ?code= link: show pre-populated code + join (original UI)
+if (urlCode) {
+    codeInput.value = urlCode;
+    btnCreate.style.display = 'none';
+    document.querySelector('.entry-divider').style.display = 'none';
+}
+
+updateEntryButtons();
+
+makeCodeBadgeEditable(document.getElementById('preLiveCodeText'));
+makeCodeBadgeEditable(document.getElementById('liveCode'));
+
+// ===== Screen Navigation =====
+function showScreen(id) {
+    document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+    document.getElementById(id).classList.add('active');
+}
+
+// ===== Toast =====
+let toastTimer = null;
+function showToast(msg) {
+    const t = document.getElementById('toast');
+    t.textContent = msg;
+    t.classList.add('show');
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => t.classList.remove('show'), 2500);
+}
+
+// ===== Error =====
+function friendlyError(e) {
+    const msg = (e.message || '').toLowerCase();
+    if (msg.includes('signup') || msg.includes('unauthorized') || msg.includes('auth'))
+        return 'Connection to video service failed. Please try again later.';
+    if (msg.includes('network') || msg.includes('fetch'))
+        return 'Network error. Check your internet connection and try again.';
+    if (msg.includes('room') && msg.includes('not found'))
+        return 'Room not found. Check the room code and try again.';
+    if (msg.includes('full'))
+        return 'This room is full.';
+    return e.message || 'Something went wrong. Please try again.';
+}
+
+function showError(msg) {
+    const b = document.getElementById('errorBanner');
+    b.textContent = msg;
+    b.classList.add('show');
+    setTimeout(() => b.classList.remove('show'), 5000);
+}
+
+// ===== Copy =====
+function showCopiedTip(btn, text) {
+    let tip = btn.querySelector('.copied-tip');
+    if (!tip) {
+        tip = document.createElement('span');
+        tip.className = 'copied-tip';
+        btn.appendChild(tip);
+    }
+    tip.textContent = text;
+    tip.classList.add('show');
+    setTimeout(() => tip.classList.remove('show'), 1500);
+}
+
+window.copyRawCode = (btn) => {
+    if (!VibeLive.roomCode) return;
+    navigator.clipboard.writeText(VibeLive.roomCode).then(() => {
+        if (btn) showCopiedTip(btn, 'Copied!');
+    }).catch(() => {});
+};
+
+window.copyLink = (btn) => {
+    if (!VibeLive.roomCode) return;
+    const url = customSlug
+        ? window.location.origin + '/in/' + customSlug
+        : window.location.origin + '/?code=' + VibeLive.roomCode;
+    navigator.clipboard.writeText(url).then(() => {
+        if (btn) showCopiedTip(btn, 'Copied!');
+    }).catch(() => {});
+};
+
+window.copyCode = window.copyLink;
+
+// ===== Custom Room Name =====
+function sanitizeSlug(raw) {
+    return raw.toLowerCase().trim()
+        .replace(/\s+/g, '-')
+        .replace(/[^a-z0-9\-]/g, '')
+        .replace(/-{2,}/g, '-')
+        .replace(/^-+|-+$/g, '')
+        .substring(0, 48);
+}
+
+function updateAllCodeBadges() {
+    const displayText = customSlug || VibeLive.roomCode || '';
+    const preBadge = document.getElementById('preLiveCodeText');
+    const liveBadge = document.getElementById('liveCode');
+    preBadge.textContent = displayText;
+    liveBadge.textContent = displayText;
+    const tip = customSlug && VibeLive.roomCode
+        ? `${customSlug} (code: ${VibeLive.roomCode}) — click to edit`
+        : 'Click to set a custom room name';
+    preBadge.title = tip;
+    liveBadge.title = tip;
+}
+
+function makeCodeBadgeEditable(badgeEl) {
+    badgeEl.addEventListener('click', () => {
+        if (badgeEl.querySelector('input')) return;
+
+        const wrapper = document.createElement('div');
+        wrapper.style.cssText = 'display:flex;gap:4px;align-items:center;';
+
+        const input = document.createElement('input');
+        input.type = 'text';
+        input.className = 'topbar-code-edit';
+        input.value = customSlug;
+        input.placeholder = VibeLive.roomCode || 'custom-name';
+        input.maxLength = 48;
+
+        const pinInput = document.createElement('input');
+        pinInput.type = 'tel';
+        pinInput.className = 'topbar-code-edit';
+        pinInput.value = '';
+        pinInput.placeholder = 'PIN';
+        pinInput.maxLength = 6;
+        pinInput.inputMode = 'numeric';
+        pinInput.pattern = '[0-9]*';
+        pinInput.style.cssText = 'width:60px;min-width:60px;text-align:center;';
+
+        wrapper.appendChild(input);
+        wrapper.appendChild(pinInput);
+
+        badgeEl.textContent = '';
+        badgeEl.style.padding = '0';
+        badgeEl.style.background = 'none';
+        badgeEl.style.border = 'none';
+        badgeEl.appendChild(wrapper);
+        input.focus();
+        input.select();
+
+        let committed = false;
+        async function commit() {
+            if (committed) return;
+            if (!badgeEl.contains(wrapper)) return;
+            committed = true;
+            const newSlug = sanitizeSlug(input.value);
+            const pin = pinInput.value.replace(/\D/g, '');
+
+            if (newSlug && VibeLive.roomCode) {
+                const existing = await lookupSlug(newSlug);
+                if (existing && existing.code !== VibeLive.roomCode) {
+                    showError(`"${newSlug}" is already taken`);
+                    committed = false;
+                    return;
+                }
+                customSlug = newSlug;
+                saveSlug(customSlug, VibeLive.roomCode, pin || null);
+            } else {
+                customSlug = newSlug;
+            }
+
+            badgeEl.style.padding = '';
+            badgeEl.style.background = '';
+            badgeEl.style.border = '';
+            updateAllCodeBadges();
+            showToast(customSlug
+                ? `Room name set to "${customSlug}"${pin ? ' with PIN' : ''}`
+                : 'Using default room code');
+        }
+
+        function cancel() {
+            committed = true;
+            badgeEl.style.padding = '';
+            badgeEl.style.background = '';
+            badgeEl.style.border = '';
+            updateAllCodeBadges();
+        }
+
+        [input, pinInput].forEach(el => {
+            el.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter') { e.preventDefault(); commit(); }
+                if (e.key === 'Escape') { e.preventDefault(); cancel(); }
+            });
+            el.addEventListener('blur', () => {
+                setTimeout(() => {
+                    if (!wrapper.contains(document.activeElement)) commit();
+                }, 100);
+            });
+        });
+    });
+}
+
+// ===== Create Room =====
+window.createRoom = async () => {
+    const name = nameInput.value.trim();
+    if (!name) return;
+    localName = name;
+
+    btnCreate.disabled = true;
+    btnCreate.innerHTML = '<span class="spinner"></span>Creating...';
+
+    try {
+        await VibeLive.signup(name);
+        const room = await VibeLive.createRoom(`${name}'s Tiny Room`);
+        await VibeLive.enterByRoomCode(room.room_code);
+    } catch (e) {
+        showError(friendlyError(e));
+        btnCreate.disabled = false;
+        btnCreate.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="width:18px;height:18px;"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg> Start a Room';
+    }
+};
+
+// ===== Join Room =====
+window.joinRoom = async () => {
+    const name = nameInput.value.trim();
+    const code = codeInput.value.trim();
+    if (!name || !code) return;
+
+    if (requiredPin) {
+        const enteredPin = document.getElementById('pinInput').value.replace(/\D/g, '');
+        if (enteredPin !== requiredPin) {
+            showError('Incorrect PIN');
+            return;
+        }
+    }
+
+    localName = name;
+    btnJoin.disabled = true;
+
+    try {
+        await VibeLive.signup(name);
+        await VibeLive.enterByRoomCode(code);
+    } catch (e) {
+        showError(friendlyError(e));
+        btnJoin.disabled = false;
+        btnJoin.textContent = 'Join';
+    }
+};
+
+// ===== Pre-Live Controls =====
+window.togglePreCam = () => {
+    VibeLive.setVideo(!VibeLive.mediaState.video);
+};
+
+window.togglePreMic = () => {
+    VibeLive.setAudio(!VibeLive.mediaState.audio);
+};
+
+// ===== Back to Entry =====
+window.backToEntry = () => {
+    isLeavingRoom = true;
+    customSlug = '';
+    VibeLive.exitRoom();
+    document.getElementById('previewArea').innerHTML = '';
+
+    showScreen('entryScreen');
+    btnCreate.disabled = false;
+    btnCreate.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="width:18px;height:18px;"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg> Start a Room';
+    btnJoin.disabled = false;
+    btnJoin.textContent = 'Join';
+    updateEntryButtons();
+    setTimeout(() => { isLeavingRoom = false; }, 200);
+};
+
+// ===== Go Live =====
+window.goLive = async () => {
+    try {
+        await VibeLive.startLive();
+    } catch (e) {
+        showError('Failed to go live: ' + e.message);
+    }
+};
+
+// ===== Live Controls =====
+window.toggleLiveMic = () => {
+    const s = VibeLive.mediaState;
+    if (!s.audio) {
+        VibeLive.setAudio(true);
+    } else {
+        VibeLive.setAudioMuted(!s.audioMuted);
+    }
+};
+
+window.toggleLiveCam = () => {
+    VibeLive.setVideo(!VibeLive.mediaState.video);
+};
+
+window.toggleLiveScreen = () => {
+    const screenTileId = `tile-${VibeLive.memberId}-screenshare`;
+    let existingTile = document.getElementById(screenTileId);
+
+    // Ensure tile exists before starting (Element-First Rule)
+    if (!existingTile) {
+        const tile = createVideoTile(VibeLive.memberId, localName, 'screenshare', true);
+        if (tile) {
+            tile.style.display = 'none';
+            document.getElementById('videoGrid').appendChild(tile);
+        }
+    }
+
+    // Let localMediaChange handle showing/removing the tile
+    VibeLive.setScreenshare(!VibeLive.screenState.video);
+};
+
+// ===== Leave Room =====
+window.leaveRoom = () => {
+    isLeavingRoom = true;
+    customSlug = '';
+    VibeLive.exitRoom();
+
+    document.getElementById('videoGrid').innerHTML = '';
+    document.getElementById('previewArea').innerHTML = '';
+    hideResetButton();
+
+    showScreen('entryScreen');
+    btnCreate.disabled = false;
+    btnCreate.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="width:18px;height:18px;"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg> Start a Room';
+    btnJoin.disabled = false;
+    btnJoin.textContent = 'Join';
+    updateEntryButtons();
+    setTimeout(() => { isLeavingRoom = false; }, 200);
+};
+
+// ===== Video Tile Creation =====
+function createVideoTile(memberId, name, streamType, isLocal) {
+    const tileId = `tile-${memberId}-${streamType}`;
+    if (document.getElementById(tileId)) return;
+
+    const tile = document.createElement('div');
+    tile.className = 'video-tile';
+    tile.id = tileId;
+    tile.dataset.memberId = memberId;
+    tile.dataset.streamType = streamType;
+    tile.dataset.isLocal = isLocal ? 'true' : 'false';
+
+    const videoContainer = document.createElement('div');
+    videoContainer.className = 'video-container';
+
+    const placeholder = document.createElement('div');
+    placeholder.className = 'video-placeholder';
+    const initials = getInitials(name);
+    if (streamType === 'camera') {
+        placeholder.innerHTML = `<span>${initials}</span>`;
+    } else {
+        placeholder.innerHTML = `<span class="ph-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg></span>`;
+    }
+
+    const video = document.createElement('video');
+    video.autoplay = true;
+    video.playsInline = true;
+    video.muted = (isLocal || streamType === 'screenshare');
+    if (isLocal && streamType === 'camera') {
+        video.style.transform = 'scaleX(-1)';
+    }
+
+    videoContainer.appendChild(placeholder);
+    videoContainer.appendChild(video);
+
+    const memberInfo = document.createElement('div');
+    memberInfo.className = 'member-info';
+    if (streamType === 'camera') {
+        memberInfo.innerHTML = `
+            <span class="member-name">${isLocal ? name + ' (You)' : name}</span>
+            <div class="member-indicators">
+                <span class="status-badge"></span>
+                <span class="indicator cam-video" title="Camera"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 7l-7 5 7 5V7z"/><rect x="1" y="5" width="15" height="14" rx="2" ry="2"/></svg></span>
+                <span class="indicator cam-audio" title="Mic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg></span>
+            </div>
+        `;
+    } else {
+        memberInfo.innerHTML = `
+            <span class="member-name">${isLocal ? 'Your Screen' : name + "'s Screen"}</span>
+            <div class="member-indicators">
+                <span class="indicator screen-video" title="Screen"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg></span>
+            </div>
+        `;
+    }
+
+    tile.appendChild(videoContainer);
+    tile.appendChild(memberInfo);
+
+    // Drag handle
+    const dragHandle = document.createElement('button');
+    dragHandle.className = 'tile-action-btn drag-handle';
+    dragHandle.title = 'Drag to reposition';
+    dragHandle.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="5" r="1"/><circle cx="15" cy="5" r="1"/><circle cx="9" cy="12" r="1"/><circle cx="15" cy="12" r="1"/><circle cx="9" cy="19" r="1"/><circle cx="15" cy="19" r="1"/></svg>';
+    tile.appendChild(dragHandle);
+
+    // Resize handle
+    const resizeHandle = document.createElement('div');
+    resizeHandle.className = 'resize-handle';
+    resizeHandle.title = 'Drag to resize';
+    tile.appendChild(resizeHandle);
+
+    // Spotlight button for camera tiles
+    if (streamType === 'camera') {
+        const tileActions = document.createElement('div');
+        tileActions.className = 'tile-actions';
+        const spotlightBtn = document.createElement('button');
+        spotlightBtn.className = 'tile-action-btn spotlight-btn';
+        spotlightBtn.title = 'Spotlight';
+        spotlightBtn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 3H5a2 2 0 0 0-2 2v3"/><path d="M21 8V5a2 2 0 0 0-2-2h-3"/><path d="M3 16v3a2 2 0 0 0 2 2h3"/><path d="M16 21h3a2 2 0 0 0 2-2v-3"/></svg>';
+        spotlightBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            toggleSpotlight(tile, spotlightBtn);
+        });
+        tileActions.appendChild(spotlightBtn);
+        tile.appendChild(tileActions);
+    }
+
+    // Fullscreen button for screenshare tiles
+    if (streamType === 'screenshare') {
+        const tileActions = document.createElement('div');
+        tileActions.className = 'tile-actions';
+        const fullscreenBtn = document.createElement('button');
+        fullscreenBtn.className = 'tile-action-btn';
+        fullscreenBtn.title = 'Toggle fullscreen';
+        fullscreenBtn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 3 21 3 21 9"/><polyline points="9 21 3 21 3 15"/><line x1="21" y1="3" x2="14" y2="10"/><line x1="3" y1="21" x2="10" y2="14"/></svg>';
+        fullscreenBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            toggleTileFullscreen(tile, fullscreenBtn);
+        });
+        tileActions.appendChild(fullscreenBtn);
+        tile.appendChild(tileActions);
+    }
+
+    // Register local elements immediately (Element-First Rule)
+    if (isLocal) {
+        if (streamType === 'camera') {
+            VibeLive.setLocalCamera(video);
+        } else {
+            VibeLive.setLocalScreen(video);
+        }
+    }
+
+    return tile;
+}
+
+function getInitials(name) {
+    if (!name) return '?';
+    const parts = name.trim().split(/\s+/);
+    if (parts.length >= 2) return (parts[0][0] + parts[1][0]).toUpperCase();
+    return name[0].toUpperCase();
+}
+
+// ===== Grid Layout Update =====
+function updateGridLayout() {
+    const grid = document.getElementById('videoGrid');
+    const allTiles = Array.from(grid.querySelectorAll('.video-tile')).filter(
+        c => c.style.display !== 'none'
+    );
+    const hasScreenshare = allTiles.some(c => c.dataset.streamType === 'screenshare');
+    const hasSpotlight = allTiles.some(c => c.classList.contains('tile-spotlighted'));
+
+    grid.className = '';
+
+    if (hasScreenshare || hasSpotlight) {
+        grid.classList.add('presentation');
+
+        let area = grid.querySelector('.screenshare-area');
+        if (!area) {
+            area = document.createElement('div');
+            area.className = 'screenshare-area';
+            grid.prepend(area);
+        }
+        const screenTiles = allTiles.filter(c => c.dataset.streamType === 'screenshare');
+        screenTiles.forEach(tile => area.appendChild(tile));
+        const spotlightTiles = allTiles.filter(c => c.dataset.streamType === 'camera' && c.classList.contains('tile-spotlighted'));
+        spotlightTiles.forEach(tile => area.appendChild(tile));
+
+        let strip = grid.querySelector('.camera-strip');
+        if (!strip) {
+            strip = document.createElement('div');
+            strip.className = 'camera-strip';
+            grid.appendChild(strip);
+        }
+        const camTiles = allTiles.filter(c => c.dataset.streamType === 'camera' && !c.classList.contains('tile-spotlighted'));
+        camTiles.forEach(tile => {
+            if (!tile.classList.contains('tile-dragged')) {
+                tile.style.bottom = '';
+                tile.style.right = '';
+                tile.style.left = '';
+                tile.style.top = '';
+                tile.style.width = '';
+                strip.appendChild(tile);
+            }
+        });
+    } else {
+        const area = grid.querySelector('.screenshare-area');
+        if (area) {
+            Array.from(area.children).forEach(tile => grid.appendChild(tile));
+            area.remove();
+        }
+        const strip = grid.querySelector('.camera-strip');
+        if (strip) {
+            Array.from(strip.children).forEach(tile => grid.appendChild(tile));
+            strip.remove();
+        }
+        const allVisible = Array.from(grid.children).filter(c =>
+            c.style.display !== 'none' && c.classList.contains('video-tile')
+        );
+        allVisible.forEach(tile => {
+            if (!tile.classList.contains('tile-dragged')) {
+                tile.style.bottom = '';
+                tile.style.right = '';
+                tile.style.left = '';
+                tile.style.top = '';
+                tile.style.width = '';
+            }
+        });
+        const gridCount = allVisible.filter(c => !c.classList.contains('tile-dragged')).length;
+        if (gridCount > 0) grid.classList.add(`grid-${Math.min(gridCount, 8)}`);
+    }
+}
+
+// ===== Tile Fullscreen =====
+function toggleTileFullscreen(tile, btn) {
+    if (document.fullscreenElement === tile) {
+        document.exitFullscreen().catch(() => {});
+    } else {
+        (tile.requestFullscreen || tile.webkitRequestFullscreen).call(tile).catch((err) => {
+            showError('Fullscreen not available');
+        });
+    }
+}
+
+// ===== Spotlight =====
+const SPOTLIGHT_EXPAND_SVG = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 3H5a2 2 0 0 0-2 2v3"/><path d="M21 8V5a2 2 0 0 0-2-2h-3"/><path d="M3 16v3a2 2 0 0 0 2 2h3"/><path d="M16 21h3a2 2 0 0 0 2-2v-3"/></svg>';
+const SPOTLIGHT_MINIMIZE_SVG = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 3v3a2 2 0 0 1-2 2H3"/><path d="M21 8h-3a2 2 0 0 1-2-2V3"/><path d="M3 16h3a2 2 0 0 1 2 2v3"/><path d="M16 21v-3a2 2 0 0 1 2-2h3"/></svg>';
+
+function toggleSpotlight(tile, btn) {
+    const wasSpotlighted = tile.classList.contains('tile-spotlighted');
+
+    document.querySelectorAll('#videoGrid .video-tile.tile-spotlighted').forEach(t => {
+        t.classList.remove('tile-spotlighted');
+        const otherBtn = t.querySelector('.spotlight-btn');
+        if (otherBtn) {
+            otherBtn.innerHTML = SPOTLIGHT_EXPAND_SVG;
+            otherBtn.title = 'Spotlight';
+        }
+    });
+
+    if (!wasSpotlighted) {
+        tile.classList.add('tile-spotlighted');
+        if (btn) {
+            btn.innerHTML = SPOTLIGHT_MINIMIZE_SVG;
+            btn.title = 'Remove spotlight';
+        }
+    }
+
+    updateGridLayout();
+}
+
+document.addEventListener('fullscreenchange', () => {
+    document.querySelectorAll('.tile-actions .tile-action-btn').forEach(btn => {
+        const tile = btn.closest('.video-tile');
+        if (!tile) return;
+        const isFs = document.fullscreenElement === tile;
+        btn.innerHTML = isFs
+            ? '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="4 14 10 14 10 20"/><polyline points="20 10 14 10 14 4"/><line x1="14" y1="10" x2="21" y2="3"/><line x1="3" y1="21" x2="10" y2="14"/></svg>'
+            : '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 3 21 3 21 9"/><polyline points="9 21 3 21 3 15"/><line x1="21" y1="3" x2="14" y2="10"/><line x1="3" y1="21" x2="10" y2="14"/></svg>';
+        btn.title = isFs ? 'Exit fullscreen' : 'Toggle fullscreen';
+    });
+});
+
+// ===== Draggable Tiles =====
+let dragState = null;
+
+function initDrag(tile, startX, startY) {
+    const grid = document.getElementById('videoGrid');
+    const gridRect = grid.getBoundingClientRect();
+
+    if (!tile.classList.contains('tile-dragged')) {
+        const tileRect = tile.getBoundingClientRect();
+        tile.style.bottom = '';
+        tile.style.right = '';
+        tile.style.left = (tileRect.left - gridRect.left) + 'px';
+        tile.style.top = (tileRect.top - gridRect.top) + 'px';
+        tile.style.width = tileRect.width + 'px';
+        tile.classList.add('tile-dragged');
+        updateGridLayout();
+        showResetButton();
+    }
+
+    const tileLeft = parseFloat(tile.style.left);
+    const tileTop = parseFloat(tile.style.top);
+
+    dragState = {
+        tile,
+        offsetX: startX - gridRect.left - tileLeft,
+        offsetY: startY - gridRect.top - tileTop,
+        gridRect
+    };
+
+    tile.classList.add('tile-dragging');
+}
+
+function moveDrag(clientX, clientY) {
+    if (!dragState) return;
+    const { tile, offsetX, offsetY, gridRect } = dragState;
+    const newLeft = clientX - gridRect.left - offsetX;
+    const newTop = clientY - gridRect.top - offsetY;
+    const maxLeft = gridRect.width - tile.offsetWidth;
+    const maxTop = gridRect.height - tile.offsetHeight;
+    tile.style.left = Math.max(0, Math.min(newLeft, maxLeft)) + 'px';
+    tile.style.top = Math.max(0, Math.min(newTop, maxTop)) + 'px';
+}
+
+function endDrag() {
+    if (!dragState) return;
+    dragState.tile.classList.remove('tile-dragging');
+    dragState = null;
+}
+
+// ===== Resizable Tiles =====
+let resizeState = null;
+
+function initResize(tile, startX, startY) {
+    const grid = document.getElementById('videoGrid');
+    const gridRect = grid.getBoundingClientRect();
+
+    if (!tile.classList.contains('tile-dragged')) {
+        const tileRect = tile.getBoundingClientRect();
+        tile.style.bottom = '';
+        tile.style.right = '';
+        tile.style.left = (tileRect.left - gridRect.left) + 'px';
+        tile.style.top = (tileRect.top - gridRect.top) + 'px';
+        tile.style.width = tileRect.width + 'px';
+        tile.style.height = tileRect.height + 'px';
+        tile.classList.add('tile-dragged');
+        updateGridLayout();
+    }
+
+    const startWidth = tile.offsetWidth;
+    const startHeight = tile.offsetHeight;
+    if (!tile.style.height) {
+        tile.style.height = startHeight + 'px';
+    }
+
+    tile.classList.add('tile-resized', 'tile-resizing');
+    showResetButton();
+
+    resizeState = {
+        tile,
+        startX,
+        startY,
+        startWidth,
+        startHeight,
+        gridRect
+    };
+}
+
+function moveResize(clientX, clientY) {
+    if (!resizeState) return;
+    const { tile, startX, startY, startWidth, startHeight, gridRect } = resizeState;
+    const deltaX = clientX - startX;
+    const deltaY = clientY - startY;
+    const maxWidth = gridRect.width - parseFloat(tile.style.left || 0);
+    const maxHeight = gridRect.height - parseFloat(tile.style.top || 0);
+    tile.style.width = Math.max(160, Math.min(startWidth + deltaX, maxWidth)) + 'px';
+    tile.style.height = Math.max(90, Math.min(startHeight + deltaY, maxHeight)) + 'px';
+}
+
+function endResize() {
+    if (!resizeState) return;
+    resizeState.tile.classList.remove('tile-resizing');
+    resizeState = null;
+}
+
+// ===== Drag & Resize Event Listeners =====
+document.addEventListener('mousedown', (e) => {
+    const handle = e.target.closest('.drag-handle');
+    const resHandle = e.target.closest('.resize-handle');
+    if (handle) {
+        const tile = handle.closest('.video-tile');
+        if (tile) { e.preventDefault(); initDrag(tile, e.clientX, e.clientY); }
+    } else if (resHandle) {
+        const tile = resHandle.closest('.video-tile');
+        if (tile) { e.preventDefault(); initResize(tile, e.clientX, e.clientY); }
+    }
+});
+
+document.addEventListener('mousemove', (e) => {
+    if (dragState) { e.preventDefault(); moveDrag(e.clientX, e.clientY); }
+    if (resizeState) { e.preventDefault(); moveResize(e.clientX, e.clientY); }
+});
+
+document.addEventListener('mouseup', () => {
+    endDrag();
+    endResize();
+});
+
+document.addEventListener('touchstart', (e) => {
+    const handle = e.target.closest('.drag-handle');
+    const resHandle = e.target.closest('.resize-handle');
+    if (handle) {
+        const tile = handle.closest('.video-tile');
+        if (tile) { initDrag(tile, e.touches[0].clientX, e.touches[0].clientY); }
+    } else if (resHandle) {
+        const tile = resHandle.closest('.video-tile');
+        if (tile) { initResize(tile, e.touches[0].clientX, e.touches[0].clientY); }
+    }
+}, { passive: true });
+
+document.addEventListener('touchmove', (e) => {
+    if (dragState || resizeState) {
+        e.preventDefault();
+        const t = e.touches[0];
+        if (dragState) moveDrag(t.clientX, t.clientY);
+        if (resizeState) moveResize(t.clientX, t.clientY);
+    }
+}, { passive: false });
+
+document.addEventListener('touchend', () => {
+    endDrag();
+    endResize();
+});
+
+// ===== Reset Layout =====
+function showResetButton() {
+    document.getElementById('resetLayoutBtn')?.classList.add('visible');
+}
+
+function hideResetButton() {
+    document.getElementById('resetLayoutBtn')?.classList.remove('visible');
+}
+
+window.resetTileLayout = () => {
+    document.querySelectorAll('#videoGrid .video-tile.tile-dragged').forEach(tile => {
+        tile.classList.remove('tile-dragged', 'tile-resized');
+        tile.style.left = '';
+        tile.style.top = '';
+        tile.style.right = '';
+        tile.style.bottom = '';
+        tile.style.width = '';
+        tile.style.height = '';
+    });
+    document.querySelectorAll('#videoGrid .video-tile.tile-spotlighted').forEach(tile => {
+        tile.classList.remove('tile-spotlighted');
+        const btn = tile.querySelector('.spotlight-btn');
+        if (btn) {
+            btn.innerHTML = SPOTLIGHT_EXPAND_SVG;
+            btn.title = 'Spotlight';
+        }
+    });
+    hideResetButton();
+    updateGridLayout();
+    showToast('Layout reset');
+};
+
+// ===== Member Indicators =====
+function updateMemberIndicators(memberId, streamType) {
+    const isLocal = memberId === VibeLive.memberId;
+
+    // Camera tile indicators
+    const camTile = document.getElementById(`tile-${memberId}-camera`);
+    if (camTile) {
+        let camOn, micOn;
+
+        if (isLocal) {
+            const s = VibeLive.mediaState;
+            camOn = s.video;
+            micOn = s.audio && !s.audioMuted;
+        } else {
+            const states = VibeLive.getMediaStates(memberId);
+            camOn = states?.videoDetail === 'ON';
+            micOn = states?.audioDetail === 'ON';
+        }
+
+        const camInd = camTile.querySelector('.cam-video');
+        const micInd = camTile.querySelector('.cam-audio');
+        if (camInd) {
+            camInd.classList.toggle('off', !camOn);
+            camInd.innerHTML = camOn ? ICONS.camOn : ICONS.camOff;
+        }
+        if (micInd) {
+            micInd.classList.toggle('off', !micOn);
+            micInd.innerHTML = micOn ? ICONS.micOn : ICONS.micOff;
+        }
+
+        const badge = camTile.querySelector('.status-badge');
+        if (badge) {
+            badge.className = 'status-badge';
+            if (isLocal) {
+                if (VibeLive.isLive) {
+                    badge.classList.add('live');
+                    badge.textContent = 'LIVE';
+                }
+            } else {
+                const m = VibeLive.getMember(memberId);
+                if (m?.displayStatus === 'LIVE') {
+                    badge.classList.add('live');
+                    badge.textContent = 'LIVE';
+                }
+            }
+        }
+    }
+
+    // Screenshare tile indicator
+    const screenTile = document.getElementById(`tile-${memberId}-screenshare`);
+    if (screenTile) {
+        let screenOn;
+        if (isLocal) {
+            screenOn = VibeLive.screenState.video;
+        } else {
+            const states = VibeLive.getMediaStates(memberId);
+            screenOn = states?.screenVideoDetail === 'ON';
+        }
+        const screenInd = screenTile.querySelector('.screen-video');
+        if (screenInd) {
+            screenInd.classList.toggle('off', !screenOn);
+            screenInd.innerHTML = screenOn ? ICONS.screenOn : ICONS.screenOff;
+        }
+    }
+}
+
+// ===== Event Handlers =====
+VibeLive.on('channelSelected', async (channel) => {
+    updateAllCodeBadges();
+
+    showScreen('preLiveScreen');
+
+    const members = await VibeLive.getMembers();
+    const self = members.find(m => m.id === VibeLive.memberId);
+    if (self) {
+        const camTile = createVideoTile(self.id, self.displayName, 'camera', true);
+        if (camTile) document.getElementById('previewArea').appendChild(camTile);
+
+        const screenTile = createVideoTile(self.id, self.displayName, 'screenshare', true);
+        if (screenTile) {
+            screenTile.style.display = 'none';
+            document.getElementById('videoGrid').appendChild(screenTile);
+        }
+    }
+
+    await VibeLive.setVideo(true);
+    await VibeLive.setAudio(true);
+});
+
+VibeLive.on('localJoined', async () => {
+    showScreen('liveScreen');
+
+    const localCamTile = document.getElementById(`tile-${VibeLive.memberId}-camera`);
+    if (localCamTile) {
+        document.getElementById('videoGrid').appendChild(localCamTile);
+    }
+
+    const members = await VibeLive.getMembers();
+    members.forEach(m => {
+        if (m.id === VibeLive.memberId) return;
+        if (m.displayStatus === 'LIVE' || m.displayStatus === 'PRE-LIVE') {
+            const tile = createVideoTile(m.id, m.displayName, 'camera', false);
+            if (tile) document.getElementById('videoGrid').appendChild(tile);
+        }
+    });
+
+    updateGridLayout();
+    updateLocalControlUI();
+});
+
+VibeLive.on('localLeft', () => {
+    if (isLeavingRoom) return;
+
+    document.querySelectorAll('#videoGrid .video-tile').forEach(tile => {
+        if (tile.dataset.memberId !== VibeLive.memberId) {
+            tile.remove();
+        }
+    });
+
+    const localCamTile = document.getElementById(`tile-${VibeLive.memberId}-camera`);
+    if (localCamTile) {
+        document.getElementById('previewArea').appendChild(localCamTile);
+    }
+
+    showScreen('preLiveScreen');
+    updateGridLayout();
+});
+
+VibeLive.on('remoteJoined', (memberId) => {
+    if (!VibeLive.isLive) return;
+    const m = VibeLive.getMember(memberId);
+    const tile = createVideoTile(memberId, m?.displayName || 'Unknown', 'camera', false);
+    if (tile) document.getElementById('videoGrid').appendChild(tile);
+    updateGridLayout();
+});
+
+VibeLive.on('remoteLeft', (memberId) => {
+    const m = VibeLive.getMember(memberId);
+    if (m?.displayStatus === 'EXITED') {
+        document.getElementById(`tile-${memberId}-camera`)?.remove();
+        document.getElementById(`tile-${memberId}-screenshare`)?.remove();
+        updateGridLayout();
+    }
+});
+
+VibeLive.on('memberStateChange', (memberId, state) => {
+    // Unified state handler — update indicators for any member
+    updateMemberIndicators(memberId);
+
+    // Update visibility based on state
+    const camTile = document.getElementById(`tile-${memberId}-camera`);
+    if (camTile) {
+        const videoOn = state.video === 'ON';
+        camTile.querySelector('.video-placeholder')?.classList.toggle('hidden', videoOn);
+        camTile.querySelector('video')?.classList.toggle('visible', videoOn);
+    }
+
+    const screenTile = document.getElementById(`tile-${memberId}-screenshare`);
+    if (screenTile) {
+        const screenOn = state.screenVideo !== 'OFF';
+        screenTile.style.display = screenOn ? 'flex' : 'none';
+    }
+
+    if (memberId === VibeLive.memberId) {
+        updateLocalControlUI();
+    }
+});
+
+VibeLive.on('memberUpdate', (memberId) => {
+    const member = VibeLive.getMember(memberId);
+    if (!member) return;
+
+    // Update self controls when own status changes
+    if (memberId === VibeLive.memberId) {
+        updateLocalControlUI();
+    }
+
+    // Clean up tiles for members who exited (ghost prevention)
+    if (memberId !== VibeLive.memberId && member.displayStatus === 'EXITED') {
+        document.getElementById(`tile-${memberId}-camera`)?.remove();
+        document.getElementById(`tile-${memberId}-screenshare`)?.remove();
+        updateGridLayout();
+        return;
+    }
+
+    updateMemberIndicators(memberId);
+});
+
+VibeLive.on('remoteStreamStart', (memberId, streamType) => {
+    if (!VibeLive.isLive) return;
+
+    const m = VibeLive.getMember(memberId);
+    const tileId = `tile-${memberId}-${streamType}`;
+    let tile = document.getElementById(tileId);
+
+    if (!tile) {
+        tile = createVideoTile(memberId, m?.displayName || 'Unknown', streamType, false);
+        if (tile) document.getElementById('videoGrid').appendChild(tile);
+    }
+
+    if (!tile) return;
+
+    const placeholder = tile.querySelector('.video-placeholder');
+    const video = tile.querySelector('video');
+
+    if (placeholder) placeholder.classList.add('hidden');
+    if (video) {
+        video.classList.add('visible');
+        if (streamType === 'camera') {
+            VibeLive.setRemoteCamera(memberId, video);
+        } else {
+            VibeLive.setRemoteScreen(memberId, video);
+        }
+    }
+
+    updateGridLayout();
+    updateMemberIndicators(memberId, streamType);
+});
+
+VibeLive.on('remoteStreamEnd', (memberId, streamType) => {
+    const tileId = `tile-${memberId}-${streamType}`;
+    const tile = document.getElementById(tileId);
+    if (!tile) return;
+
+    if (streamType === 'screenshare') {
+        tile.remove();
+    } else {
+        const video = tile.querySelector('video');
+        const placeholder = tile.querySelector('.video-placeholder');
+        if (video) video.classList.remove('visible');
+        if (placeholder) placeholder.classList.remove('hidden');
+    }
+
+    updateGridLayout();
+    updateMemberIndicators(memberId, streamType);
+});
+
+VibeLive.on('remoteMediaChange', (memberId, streamType) => {
+    const states = VibeLive.getMediaStates(memberId);
+    const tileId = `tile-${memberId}-${streamType}`;
+    const tile = document.getElementById(tileId);
+    if (!tile) return;
+
+    const video = tile.querySelector('video');
+    const placeholder = tile.querySelector('.video-placeholder');
+
+    let showPlaceholder = false;
+    if (streamType === 'camera') {
+        showPlaceholder = states.videoDetail !== 'ON';
+    } else {
+        showPlaceholder = states.screenVideoDetail !== 'ON';
+    }
+
+    if (showPlaceholder) {
+        video?.classList.remove('visible');
+        placeholder?.classList.remove('hidden');
+    } else {
+        video?.classList.add('visible');
+        placeholder?.classList.add('hidden');
+    }
+
+    updateMemberIndicators(memberId, streamType);
+});
+
+VibeLive.on('localMediaChange', () => {
+    const s = VibeLive.mediaState;
+    const screen = VibeLive.screenState;
+
+    const camTile = document.getElementById(`tile-${VibeLive.memberId}-camera`);
+    if (camTile) {
+        const placeholder = camTile.querySelector('.video-placeholder');
+        const video = camTile.querySelector('video');
+        if (s.video) {
+            placeholder?.classList.add('hidden');
+            video?.classList.add('visible');
+        } else {
+            placeholder?.classList.remove('hidden');
+            video?.classList.remove('visible');
+        }
+    }
+
+    const screenTile = document.getElementById(`tile-${VibeLive.memberId}-screenshare`);
+    if (screenTile) {
+        if (screen.video) {
+            screenTile.style.display = 'flex';
+            screenTile.querySelector('.video-placeholder')?.classList.add('hidden');
+            screenTile.querySelector('video')?.classList.add('visible');
+        } else {
+            screenTile.style.display = 'none';
+        }
+    }
+
+    updateGridLayout();
+    updateLocalControlUI();
+    updateMemberIndicators(VibeLive.memberId);
+});
+
+VibeLive.on('error', (context, error) => {
+    console.error('VibeLive error:', context, error?.code || '', error?.message || error);
+    // Suppress non-critical media toggle errors from banner
+    if (['toggleVideo', 'toggleAudio', 'setVideo', 'setAudio'].includes(context)) {
+        return;
+    }
+    showError(error?.hint || error?.message || `Error: ${context}`);
+});
+
+VibeLive.on('warning', (context, message) => {
+    console.warn('VibeLive warning:', context, message);
+});
+
+VibeLive.on('kicked', (message) => {
+    VibeLive.exitRoom();
+    document.getElementById('videoGrid').innerHTML = '';
+    document.getElementById('previewArea').innerHTML = '';
+    showScreen('entryScreen');
+    updateEntryButtons();
+
+    const overlay = document.getElementById('kickedOverlay');
+    document.getElementById('kickedMessage').textContent = message || 'You have been removed from the meeting.';
+    overlay.style.display = 'flex';
+});
+
+window.closeKickedModal = () => {
+    document.getElementById('kickedOverlay').style.display = 'none';
+};
+
+// ===== Update Control Button States =====
+function updateLocalControlUI() {
+    const s = VibeLive.mediaState;
+    const screen = VibeLive.screenState;
+
+    const camOn = s.video;
+    const micOn = s.audio && !s.audioMuted;
+    const screenOn = screen.video;
+
+    // Pre-live buttons
+    const preCamBtn = document.getElementById('preCamBtn');
+    const preMicBtn = document.getElementById('preMicBtn');
+    preCamBtn.classList.toggle('active', camOn);
+    preCamBtn.classList.toggle('off', !camOn);
+    preCamBtn.innerHTML = camOn ? ICONS.camOn : ICONS.camOff;
+    preMicBtn.classList.toggle('active', micOn);
+    preMicBtn.classList.toggle('off', !micOn);
+    preMicBtn.innerHTML = micOn ? ICONS.micOn : ICONS.micOff;
+
+    // Live buttons
+    const liveCamBtn = document.getElementById('liveCamBtn');
+    const liveMicBtn = document.getElementById('liveMicBtn');
+    const liveScreenBtn = document.getElementById('liveScreenBtn');
+
+    liveCamBtn.classList.toggle('active', camOn);
+    liveCamBtn.classList.toggle('off', !camOn);
+    liveCamBtn.innerHTML = camOn ? ICONS.camOn : ICONS.camOff;
+    liveMicBtn.classList.toggle('active', micOn);
+    liveMicBtn.classList.toggle('off', !micOn);
+    liveMicBtn.innerHTML = micOn ? ICONS.micOn : ICONS.micOff;
+    liveScreenBtn.classList.toggle('active', screenOn);
+    liveScreenBtn.classList.toggle('off', !screenOn);
+    liveScreenBtn.innerHTML = screenOn ? ICONS.screenOn : ICONS.screenOff;
+}
+</script>
+</body>
+</html>
