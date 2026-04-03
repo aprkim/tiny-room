@@ -1748,14 +1748,9 @@ function createVideoTile(memberId, name, streamType, isLocal) {
         tile.appendChild(tileActions);
     }
 
-    // Register local elements immediately (Element-First Rule)
-    if (isLocal) {
-        if (streamType === 'camera') {
-            VibeLive.setLocalCamera(video);
-        } else {
-            VibeLive.setLocalScreen(video);
-        }
-    }
+    // registerTile auto-finds <video> and registers it (replaces setLocalCamera/setRemoteCamera).
+    // SDK auto-removes registered tiles on member exit, screenshare end, room exit, or kick.
+    VibeLive.registerTile(memberId, streamType, tile);
 
     return tile;
 }
@@ -2185,6 +2180,7 @@ VibeLive.on('localJoined', async () => {
 VibeLive.on('localLeft', () => {
     if (isLeavingRoom) return;
 
+    // Remote tiles may be auto-cleaned by SDK; clear any remaining
     document.querySelectorAll('#videoGrid .video-tile').forEach(tile => {
         if (tile.dataset.memberId !== VibeLive.memberId) {
             tile.remove();
@@ -2209,12 +2205,9 @@ VibeLive.on('remoteJoined', (memberId) => {
 });
 
 VibeLive.on('remoteLeft', (memberId) => {
-    const m = VibeLive.getMember(memberId);
-    if (m?.displayStatus === 'EXITED') {
-        document.getElementById(`tile-${memberId}-camera`)?.remove();
-        document.getElementById(`tile-${memberId}-screenshare`)?.remove();
-        updateGridLayout();
-    }
+    // Tiles auto-removed by SDK when member exits (registered tiles).
+    // Just update grid layout.
+    updateGridLayout();
 });
 
 VibeLive.on('memberStateChange', (memberId, state) => {
@@ -2249,14 +2242,7 @@ VibeLive.on('memberUpdate', (memberId) => {
         updateLocalControlUI();
     }
 
-    // Clean up tiles for members who exited (ghost prevention)
-    if (memberId !== VibeLive.memberId && member.displayStatus === 'EXITED') {
-        document.getElementById(`tile-${memberId}-camera`)?.remove();
-        document.getElementById(`tile-${memberId}-screenshare`)?.remove();
-        updateGridLayout();
-        return;
-    }
-
+    // Ghost cleanup now handled by SDK via registerTile()
     updateMemberIndicators(memberId);
 });
 
@@ -2278,31 +2264,23 @@ VibeLive.on('remoteStreamStart', (memberId, streamType) => {
     const video = tile.querySelector('video');
 
     if (placeholder) placeholder.classList.add('hidden');
-    if (video) {
-        video.classList.add('visible');
-        if (streamType === 'camera') {
-            VibeLive.setRemoteCamera(memberId, video);
-        } else {
-            VibeLive.setRemoteScreen(memberId, video);
-        }
-    }
+    if (video) video.classList.add('visible');
 
+    // registerTile (inside createVideoTile) handles video element registration.
+    // memberStateChange handles indicators.
     updateGridLayout();
     updateMemberIndicators(memberId, streamType);
 });
 
 VibeLive.on('remoteStreamEnd', (memberId, streamType) => {
-    const tileId = `tile-${memberId}-${streamType}`;
-    const tile = document.getElementById(tileId);
-    if (!tile) return;
-
-    if (streamType === 'screenshare') {
-        tile.remove();
-    } else {
-        const video = tile.querySelector('video');
-        const placeholder = tile.querySelector('.video-placeholder');
-        if (video) video.classList.remove('visible');
-        if (placeholder) placeholder.classList.remove('hidden');
+    // Screenshare tiles are auto-removed by SDK (registered tile).
+    // Camera tiles: just toggle placeholder visibility (audio may still be active).
+    if (streamType === 'camera') {
+        const tile = document.getElementById(`tile-${memberId}-${streamType}`);
+        if (tile) {
+            tile.querySelector('video')?.classList.remove('visible');
+            tile.querySelector('.video-placeholder')?.classList.remove('hidden');
+        }
     }
 
     updateGridLayout();
@@ -2383,7 +2361,8 @@ VibeLive.on('warning', (context, message) => {
 });
 
 VibeLive.on('kicked', (message) => {
-    VibeLive.exitRoom();
+    VibeLive.exitRoom();  // SDK auto-removes all registered tiles
+    // Clear any remaining containers
     document.getElementById('videoGrid').innerHTML = '';
     document.getElementById('previewArea').innerHTML = '';
     showScreen('entryScreen');
