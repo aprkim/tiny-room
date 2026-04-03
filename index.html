@@ -2231,6 +2231,8 @@ VibeLive.on('memberStateChange', (memberId, state) => {
     if (memberId === VibeLive.memberId) {
         updateLocalControlUI();
     }
+
+    updateGridLayout();
 });
 
 VibeLive.on('memberUpdate', (memberId) => {
