@@ -2067,8 +2067,12 @@
         console.warn(`[VibeLive ${context}]`, message);
     });
 
-    // remoteStreamEnd: screenshare tiles auto-removed by SDK (registered tile).
-    // remoteLeft: tiles auto-removed by SDK when member exits (registered tiles).
+    // remoteStreamEnd / remoteLeft: SDK auto-removes registered tiles,
+    // but floating tiles (on document.body) need manual cleanup
+    VibeLive.on('remoteLeft', (memberId) => {
+        document.querySelectorAll(`.video-tile.floating[data-member-id="${memberId}"]`).forEach(t => t.remove());
+        updateGridLayout();
+    });
 
 })();
 </script>
