@@ -1952,11 +1952,10 @@
         updateGridLayout();
     });
 
-    // RECOMMENDED: remoteJoined -- pre-create tile before stream arrives
+    // RECOMMENDED: remoteJoined -- tile creation deferred to remoteStreamStart
+    // so pre-live (lobby) members are not visible to live participants
     VibeLive.on('remoteJoined', (memberId) => {
-        const m = VibeLive.getMember(memberId);
-        createTile(memberId, m?.displayName || 'Remote', 'camera', false);
-        updateGridLayout();
+        // No tile created here — wait until they go live (remoteStreamStart)
     });
 
     // RECOMMENDED: kicked -- show message, exitRoom, return to entry
