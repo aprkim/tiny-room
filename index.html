@@ -558,6 +558,16 @@
             justify-content: center;
         }
         #kickedOverlay.visible { display: flex; }
+        #mobileFullOverlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: var(--overlay);
+            z-index: 9999;
+            align-items: center;
+            justify-content: center;
+        }
+        #mobileFullOverlay.visible { display: flex; }
         .kicked-card {
             background: var(--card);
             border-radius: var(--radius);
@@ -1048,6 +1058,15 @@
     </div>
 </div>
 
+<!-- Mobile Full Modal -->
+<div id="mobileFullOverlay">
+    <div class="kicked-card">
+        <h3>Room full on mobile</h3>
+        <p>TinyRoom supports up to 4 people on mobile. To join this call, please use a computer.</p>
+        <button class="btn btn-primary" id="mobileFullOkBtn">OK</button>
+    </div>
+</div>
+
 <!-- Kicked Modal -->
 <div id="kickedOverlay">
     <div class="kicked-card">
@@ -1083,6 +1102,11 @@
     const cameraGrid = $('cameraGrid');
     const screenshareGrid = $('screenshareGrid');
     const previewContainer = $('previewContainer');
+
+    // ── Mobile Participant Limit ──
+    const MOBILE_MAX_PARTICIPANTS = 4;
+    const isMobile = /Android|iPhone|iPad|iPod|webOS|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)
+        || (navigator.maxTouchPoints > 0 && window.innerWidth <= 768);
 
     let nameHintTimer = null;
     let codeHintTimer = null;
@@ -1724,6 +1748,11 @@
         $('kickedOverlay').classList.remove('visible');
     });
 
+    $('mobileFullOkBtn').addEventListener('click', () => {
+        $('mobileFullOverlay').classList.remove('visible');
+        tearDown();
+    });
+
     // ── Entry Actions ──
     startBtn.addEventListener('click', async () => {
         if (!validateName()) return;
@@ -1842,6 +1871,14 @@
 
         // Element-First Rule: create both camera and screenshare tiles
         const members = await VibeLive.getMembers();
+
+        // Mobile participant limit check
+        const activeMembers = members.filter(m => m.displayStatus !== 'EXITED');
+        if (isMobile && activeMembers.length > MOBILE_MAX_PARTICIPANTS) {
+            $('mobileFullOverlay').classList.add('visible');
+            return;
+        }
+
         const self = members.find(m => m.id === VibeLive.memberId);
         const selfName = self?.displayName || localName || 'You';
 
