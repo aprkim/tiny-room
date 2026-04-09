@@ -74,11 +74,15 @@
             font-family: var(--sans);
             background: var(--bg);
             color: var(--text);
-            height: 100vh;
+            height: 100dvh;
+            height: 100vh; /* fallback for older browsers */
             display: flex;
             flex-direction: column;
             transition: background 0.2s, color 0.2s;
             overflow: hidden;
+        }
+        @supports (height: 100dvh) {
+            body { height: 100dvh; }
         }
 
         /* Theme Toggle */
