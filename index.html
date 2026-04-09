@@ -1612,7 +1612,13 @@
     function updateTileFromState(memberId, state) {
         // state = { status, live, video, audio, screenVideo }
         const camTileId = `tile-${memberId}-camera`;
-        const camTile = document.getElementById(camTileId);
+        let camTile = document.getElementById(camTileId);
+
+        // Safety: create tile if it doesn't exist yet (race condition)
+        if (!camTile && memberId !== VibeLive.memberId && state.status !== 'EXITED') {
+            const m = VibeLive.getMember(memberId);
+            camTile = createTile(memberId, m?.displayName || 'Remote', 'camera', false);
+        }
 
         if (camTile) {
             // LIVE badge
@@ -1639,8 +1645,20 @@
             const placeholder = camTile.querySelector('.video-placeholder');
             const video = camTile.querySelector('video');
             const videoOn = state.video === 'ON';
-            if (placeholder) placeholder.classList.toggle('hidden', videoOn);
-            if (video) video.classList.toggle('visible', videoOn);
+            if (placeholder) {
+                if (videoOn) {
+                    placeholder.classList.add('hidden');
+                } else {
+                    placeholder.classList.remove('hidden');
+                }
+            }
+            if (video) {
+                if (videoOn) {
+                    video.classList.add('visible');
+                } else {
+                    video.classList.remove('visible');
+                }
+            }
         }
 
         // Screenshare tile show/hide
