@@ -1103,8 +1103,9 @@
     const screenshareGrid = $('screenshareGrid');
     const previewContainer = $('previewContainer');
 
-    // ── Mobile Participant Limit ──
+    // ── Participant Limits ──
     const MOBILE_MAX_PARTICIPANTS = 4;
+    const DESKTOP_MAX_PARTICIPANTS = 8;
     const isMobile = /Android|iPhone|iPad|iPod|webOS|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)
         || (navigator.maxTouchPoints > 0 && window.innerWidth <= 768);
 
@@ -1872,10 +1873,16 @@
         // Element-First Rule: create both camera and screenshare tiles
         const members = await VibeLive.getMembers();
 
-        // Mobile participant limit check
+        // Participant limit check
         const activeMembers = members.filter(m => m.displayStatus !== 'EXITED');
-        if (isMobile && activeMembers.length > MOBILE_MAX_PARTICIPANTS) {
-            $('mobileFullOverlay').classList.add('visible');
+        const maxParticipants = isMobile ? MOBILE_MAX_PARTICIPANTS : DESKTOP_MAX_PARTICIPANTS;
+        if (activeMembers.length > maxParticipants) {
+            if (isMobile) {
+                $('mobileFullOverlay').classList.add('visible');
+            } else {
+                showAlert(`This room is full (max ${maxParticipants} participants).`);
+                tearDown();
+            }
             return;
         }
 
