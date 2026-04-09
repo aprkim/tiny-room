@@ -579,12 +579,12 @@
 
         /* Mobile */
         @media (max-width: 640px) {
-            /* Topbar compact — wrap gracefully on narrow screens */
-            .topbar { padding: 8px 12px; flex-wrap: wrap; gap: 6px; }
-            .topbar-left { font-size: 13px; }
-            .topbar-right { flex-wrap: wrap; gap: 6px; justify-content: flex-end; }
-            .room-code-pill { font-size: 11px; padding: 3px 7px; }
-            .topbar-btn { font-size: 11px; padding: 3px 8px; white-space: nowrap; }
+            /* Topbar compact — single row, no wrap */
+            .topbar { padding: 6px 10px; }
+            .topbar-left { font-size: 12px; }
+            .topbar-right { gap: 4px; }
+            .room-code-pill { font-size: 10px; padding: 2px 6px; }
+            .topbar-btn { font-size: 10px; padding: 2px 6px; white-space: nowrap; }
 
             /* Entry screen */
             #entryScreen { padding: 16px; gap: 12px; }
@@ -596,12 +596,18 @@
             .prelive-controls { flex-wrap: wrap; gap: 8px; }
             .prelive-actions { flex-wrap: wrap; gap: 8px; }
 
-            /* Camera grid: 2-col on mobile */
+            /* Live screen: ensure topbar and controls stay visible */
+            #liveScreen { max-height: 100vh; }
+            .live-content { padding: 6px; gap: 4px; }
+
+            /* Camera grid on mobile */
             #cameraGrid { gap: 4px; }
             .camera-1 { grid-template-columns: 1fr; }
-            .camera-2 { grid-template-columns: 1fr 1fr; }
-            .camera-3 { grid-template-columns: 1fr 1fr; }
-            .camera-3 .video-tile:nth-child(3) { max-width: 100%; }
+            /* 2 participants: stack vertically on mobile */
+            .camera-2 { grid-template-columns: 1fr; grid-template-rows: 1fr 1fr; }
+            /* 3 participants: stack vertically */
+            .camera-3 { grid-template-columns: 1fr; grid-template-rows: 1fr 1fr 1fr; }
+            .camera-3 .video-tile:nth-child(3) { grid-column: auto; max-width: 100%; justify-self: auto; }
             .camera-4 { grid-template-columns: 1fr 1fr; }
             .camera-5 { grid-template-columns: repeat(2, 1fr); }
             .camera-5 .video-tile:nth-child(1) { grid-column: auto; }
@@ -627,10 +633,11 @@
             .indicator { width: 20px; height: 20px; }
             .indicator svg { width: 11px; height: 11px; }
 
-            /* Controls bar: larger touch targets, prevent overflow */
-            .ctrl-btn { width: 48px; height: 48px; min-width: 48px; }
+            /* Controls bar: touch-friendly but compact */
+            .ctrl-btn { width: 44px; height: 44px; min-width: 44px; }
+            .ctrl-btn svg { width: 18px; height: 18px; }
             .ctrl-btn.danger { margin-left: 8px; }
-            .controls-bar { gap: 8px; padding: 10px 12px; flex-wrap: wrap; }
+            .controls-bar { gap: 6px; padding: 8px 12px; flex-wrap: nowrap; }
 
             /* Video tiles: smaller radius */
             .video-tile { border-radius: 10px; }
