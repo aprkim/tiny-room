@@ -165,39 +165,50 @@
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            padding: 24px;
-            gap: 16px;
+            padding: 32px 24px;
+            gap: 0;
             overflow-y: auto;
         }
-        .entry-card {
-            background: var(--card);
-            border: 1px solid var(--border);
-            border-radius: var(--radius);
-            padding: 24px;
+        .entry-inner {
             width: 100%;
-            max-width: 400px;
+            max-width: 360px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 0;
         }
-        .entry-card label {
-            display: block;
-            font-size: 13px;
-            font-weight: 600;
-            color: var(--muted);
-            margin-bottom: 8px;
+        .entry-hero {
+            text-align: center;
+            margin-bottom: 32px;
         }
-        .entry-card input {
-            width: 100%;
-            padding: 10px 14px;
-            border: 1px solid var(--border);
-            border-radius: 10px;
-            background: var(--soft);
+        .entry-hero h1 {
+            font-size: 36px;
+            font-weight: 800;
             color: var(--text);
-            font-size: 14px;
+            margin-bottom: 8px;
+            letter-spacing: -0.5px;
+        }
+        .entry-hero p {
+            font-size: 15px;
+            color: var(--muted);
+        }
+        .entry-input {
+            width: 100%;
+            padding: 14px 18px;
+            border: 1px solid rgba(255,255,255,0.12);
+            border-radius: 14px;
+            background: transparent;
+            color: var(--text);
+            font-size: 16px;
             font-family: var(--sans);
             outline: none;
             transition: border-color 0.2s;
         }
-        .entry-card input:focus { border-color: var(--accent); }
-        .entry-card input::placeholder { color: var(--muted2); }
+        [data-theme="light"] .entry-input {
+            border-color: rgba(0,0,0,0.1);
+        }
+        .entry-input:focus { border-color: var(--accent); }
+        .entry-input::placeholder { color: var(--muted2); }
 
         .name-hint {
             font-size: 12px;
@@ -205,35 +216,51 @@
             margin-top: 6px;
             opacity: 0;
             transition: opacity 0.3s;
-            height: 18px;
+            height: 16px;
+            text-align: center;
         }
         .name-hint.visible { opacity: 1; }
+
+        .entry-cta {
+            width: 100%;
+            margin-top: 20px;
+        }
 
         .or-divider {
             display: flex;
             align-items: center;
             gap: 12px;
-            margin: 16px 0;
+            margin: 20px 0;
             color: var(--muted2);
             font-size: 12px;
+            width: 100%;
+            opacity: 0.5;
         }
         .or-divider::before, .or-divider::after {
             content: '';
             flex: 1;
             height: 1px;
-            background: var(--border);
+            background: var(--muted2);
         }
 
         .join-row {
             display: flex;
             gap: 8px;
+            width: 100%;
         }
-        .join-row input { flex: 1 1 75%; }
+        .join-row .entry-input { flex: 1; }
+
+        .entry-footer {
+            margin-top: 28px;
+            font-size: 12px;
+            color: var(--muted2);
+            text-align: center;
+        }
 
         .btn {
-            padding: 10px 20px;
-            border-radius: 10px;
-            font-size: 14px;
+            padding: 14px 24px;
+            border-radius: 16px;
+            font-size: 15px;
             font-weight: 600;
             cursor: pointer;
             border: 1px solid transparent;
@@ -251,10 +278,11 @@
         }
         .btn-primary:hover:not(:disabled) { background: var(--accentHover); }
         .btn-secondary {
-            background: var(--soft);
+            background: transparent;
             color: var(--text);
-            border-color: var(--border);
+            border-color: rgba(255,255,255,0.12);
         }
+        [data-theme="light"] .btn-secondary { border-color: rgba(0,0,0,0.1); }
         .btn-secondary:hover:not(:disabled) { border-color: var(--accent); }
         .btn-danger {
             background: var(--dangerBg);
@@ -265,7 +293,7 @@
 
         .btn:disabled { cursor: not-allowed; }
         .btn-full { width: 100%; }
-        .join-row .btn { flex: 0 0 30%; min-width: 90px; }
+        .join-row .btn { flex: 0 0 auto; min-width: 80px; padding: 14px 20px; }
 
         .spinner {
             width: 14px;
@@ -626,9 +654,9 @@
             .topbar-btn { font-size: 10px; padding: 2px 6px; white-space: nowrap; }
 
             /* Entry screen */
-            #entryScreen { padding: 16px; gap: 12px; }
-            .entry-card { padding: 16px; }
-            .entry-card input { font-size: 16px; } /* prevent iOS zoom on focus */
+            #entryScreen { padding: 20px 16px; }
+            .entry-hero h1 { font-size: 28px; }
+            .entry-input { font-size: 16px; } /* prevent iOS zoom on focus */
             .preview-container { width: 95% !important; }
 
             /* Pre-live controls: wrap if needed */
@@ -1024,25 +1052,24 @@
 
 <!-- Entry Screen -->
 <div id="entryScreen">
-    <div style="text-align:center;">
-        <h1 style="font-size:28px; font-weight:800; color:var(--accent); margin-bottom:4px;">TinyRoom</h1>
-        <p style="font-size:14px; color:var(--muted);">Video chat for up to 4 people</p>
-    </div>
-    <div id="kickedPill"></div>
-    <div class="entry-card">
-        <label for="nameInput">Your name</label>
-        <input type="text" id="nameInput" placeholder="Enter your name" maxlength="24" autofocus>
+    <div class="entry-inner">
+        <div class="entry-hero">
+            <h1>TinyRoom</h1>
+            <p>Start a call in seconds</p>
+        </div>
+        <div id="kickedPill"></div>
+        <input type="text" class="entry-input" id="nameInput" placeholder="Your name" maxlength="24" autofocus>
         <div class="name-hint" id="nameHint">Please enter your name first</div>
-    </div>
-    <div class="entry-card">
-        <button class="btn btn-primary btn-full" id="startBtn">+ Start a Room</button>
-        <div class="or-divider">OR</div>
-        <label style="font-size:13px; font-weight:600; color:var(--muted); margin-bottom:8px;">Join with room code</label>
+        <div class="entry-cta">
+            <button class="btn btn-primary btn-full" id="startBtn">Start call</button>
+        </div>
+        <div class="or-divider">or</div>
         <div class="join-row">
-            <input type="text" id="codeInput" placeholder="Room code">
+            <input type="text" class="entry-input" id="codeInput" placeholder="Room code">
             <button class="btn btn-secondary" id="joinBtn">Join</button>
         </div>
         <div class="name-hint" id="codeHint">Please enter a room code</div>
+        <div class="entry-footer">Up to 4 people &middot; Simple video chat</div>
     </div>
 </div>
 
