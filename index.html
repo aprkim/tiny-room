@@ -575,26 +575,7 @@
             height: 100%;
         }
 
-        /* Kicked Modal */
-        /* Kicked/session-ended pill banner */
-        #kickedPill {
-            display: none;
-            border-radius: 999px;
-            background: rgba(248,113,113,0.1);
-            border: 1px solid rgba(248,113,113,0.25);
-            color: var(--dangerText);
-            font-size: 13px;
-            font-weight: 600;
-            padding: 10px 20px;
-            text-align: center;
-            animation: pillIn 0.3s ease-out;
-        }
-        #kickedPill.visible { display: block; }
-        @keyframes pillIn { from { opacity: 0; transform: translateY(-8px); } to { opacity: 1; transform: translateY(0); } }
-        #kickedPill.fade-out { animation: pillOut 0.3s ease-in forwards; }
-        @keyframes pillOut { from { opacity: 1; } to { opacity: 0; transform: translateY(-8px); } }
-
-        /* Kicked overlay (kept for mobileFullOverlay reuse) */
+        /* Kicked / Session-ended Modal */
         #kickedOverlay {
             display: none;
             position: fixed;
@@ -1057,7 +1038,6 @@
             <h1>TinyRoom</h1>
             <p>Start a call in seconds</p>
         </div>
-        <div id="kickedPill"></div>
         <input type="text" class="entry-input" id="nameInput" placeholder="Your name" maxlength="24" autofocus>
         <div class="name-hint" id="nameHint">Please enter your name first</div>
         <div class="entry-cta">
@@ -1111,6 +1091,15 @@
         <button class="ctrl-btn danger" id="leaveBtn" title="Leave room">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
         </button>
+    </div>
+</div>
+
+<!-- Kicked / Session-ended Modal -->
+<div id="kickedOverlay">
+    <div class="kicked-card">
+        <h3>Session ended</h3>
+        <p id="kickedMessage"></p>
+        <button class="btn btn-primary" id="kickedOkBtn">OK</button>
     </div>
 </div>
 
@@ -1789,15 +1778,13 @@
 
     // ── Kicked Modal ──
     function showKickedModal(message) {
-        const pill = $('kickedPill');
-        pill.textContent = message || 'You have been removed from the meeting.';
-        pill.classList.remove('fade-out');
-        pill.classList.add('visible');
-        setTimeout(() => {
-            pill.classList.add('fade-out');
-            setTimeout(() => pill.classList.remove('visible', 'fade-out'), 300);
-        }, 6000);
+        $('kickedMessage').textContent = message || 'You have been removed from the meeting.';
+        $('kickedOverlay').classList.add('visible');
     }
+
+    $('kickedOkBtn').addEventListener('click', () => {
+        $('kickedOverlay').classList.remove('visible');
+    });
 
     $('mobileFullOkBtn').addEventListener('click', () => {
         $('mobileFullOverlay').classList.remove('visible');
