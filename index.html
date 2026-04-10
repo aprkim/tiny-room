@@ -548,11 +548,31 @@
         }
 
         /* Kicked Modal */
+        /* Kicked/session-ended pill banner */
+        #kickedPill {
+            display: none;
+            border-radius: 999px;
+            background: rgba(248,113,113,0.1);
+            border: 1px solid rgba(248,113,113,0.25);
+            color: var(--dangerText);
+            font-size: 13px;
+            font-weight: 600;
+            padding: 10px 20px;
+            text-align: center;
+            animation: pillIn 0.3s ease-out;
+        }
+        #kickedPill.visible { display: block; }
+        @keyframes pillIn { from { opacity: 0; transform: translateY(-8px); } to { opacity: 1; transform: translateY(0); } }
+        #kickedPill.fade-out { animation: pillOut 0.3s ease-in forwards; }
+        @keyframes pillOut { from { opacity: 1; } to { opacity: 0; transform: translateY(-8px); } }
+
+        /* Kicked overlay (kept for mobileFullOverlay reuse) */
         #kickedOverlay {
             display: none;
             position: fixed;
             inset: 0;
-            background: var(--overlay);
+            background: rgba(0,0,0,0.5);
+            backdrop-filter: blur(2px);
             z-index: 9999;
             align-items: center;
             justify-content: center;
@@ -562,7 +582,8 @@
             display: none;
             position: fixed;
             inset: 0;
-            background: var(--overlay);
+            background: rgba(0,0,0,0.5);
+            backdrop-filter: blur(2px);
             z-index: 9999;
             align-items: center;
             justify-content: center;
@@ -570,16 +591,20 @@
         #mobileFullOverlay.visible { display: flex; }
         .kicked-card {
             background: var(--card);
-            border-radius: var(--radius);
-            padding: 28px 24px 20px;
+            border: 1px solid rgba(255,255,255,0.18);
+            border-radius: 14px;
+            padding: 32px 28px 24px;
             max-width: 340px;
             width: 90%;
-            box-shadow: 0 8px 32px rgba(0,0,0,.18);
+            box-shadow: 0 20px 60px rgba(0,0,0,0.6);
             text-align: center;
         }
+        [data-theme="light"] .kicked-card {
+            border-color: rgba(0,0,0,0.08);
+        }
         .kicked-card h3 {
-            font-size: 14px;
-            font-weight: 600;
+            font-size: 15px;
+            font-weight: 700;
             color: var(--text);
             margin-bottom: 16px;
         }
@@ -1003,6 +1028,7 @@
         <h1 style="font-size:28px; font-weight:800; color:var(--accent); margin-bottom:4px;">TinyRoom</h1>
         <p style="font-size:14px; color:var(--muted);">Video chat for up to 4 people</p>
     </div>
+    <div id="kickedPill"></div>
     <div class="entry-card">
         <label for="nameInput">Your name</label>
         <input type="text" id="nameInput" placeholder="Enter your name" maxlength="24" autofocus>
@@ -1070,14 +1096,6 @@
     </div>
 </div>
 
-<!-- Kicked Modal -->
-<div id="kickedOverlay">
-    <div class="kicked-card">
-        <h3 id="kickedTitle">Session ended</h3>
-        <p id="kickedMessage"></p>
-        <button class="btn btn-primary" id="kickedOkBtn">OK</button>
-    </div>
-</div>
 
 <script src="https://makedo.com/sdk/makedo-vibelive.min.js"></script>
 <script>
@@ -1744,13 +1762,15 @@
 
     // ── Kicked Modal ──
     function showKickedModal(message) {
-        $('kickedMessage').textContent = message || 'You have been removed from the meeting.';
-        $('kickedOverlay').classList.add('visible');
+        const pill = $('kickedPill');
+        pill.textContent = message || 'You have been removed from the meeting.';
+        pill.classList.remove('fade-out');
+        pill.classList.add('visible');
+        setTimeout(() => {
+            pill.classList.add('fade-out');
+            setTimeout(() => pill.classList.remove('visible', 'fade-out'), 300);
+        }, 6000);
     }
-
-    $('kickedOkBtn').addEventListener('click', () => {
-        $('kickedOverlay').classList.remove('visible');
-    });
 
     $('mobileFullOkBtn').addEventListener('click', () => {
         $('mobileFullOverlay').classList.remove('visible');
