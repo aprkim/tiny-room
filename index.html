@@ -2040,7 +2040,12 @@
         joinBtn.disabled = false;
         joinBtn.textContent = 'Join';
         updateButtonPriority();
-        showKickedModal('You were removed from the room by the host.');
+        const rawMsg = (message || '').toLowerCase();
+        if (rawMsg.includes('disabled') || rawMsg.includes('deleted') || rawMsg.includes('removed')) {
+            showKickedModal('This room has been closed.');
+        } else {
+            showKickedModal('You were removed from the room by the host.');
+        }
     });
 
     // ── Network Status Banner ──
