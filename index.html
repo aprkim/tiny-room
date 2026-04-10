@@ -1035,9 +1035,8 @@
         <div class="name-hint" id="nameHint">Please enter your name first</div>
     </div>
     <div class="entry-card">
-        <button class="btn btn-primary btn-full" id="startBtn">+ Start a Room</button>
+        <button class="btn btn-primary btn-full" id="startBtn">Start call</button>
         <div class="or-divider">OR</div>
-        <label style="font-size:13px; font-weight:600; color:var(--muted); margin-bottom:8px;">Join with room code</label>
         <div class="join-row">
             <input type="text" id="codeInput" placeholder="Room code">
             <button class="btn btn-secondary" id="joinBtn">Join</button>
@@ -1755,7 +1754,7 @@
         showScreen('entry');
         // Reset entry buttons
         startBtn.disabled = false;
-        startBtn.textContent = '+ Start a Room';
+        startBtn.textContent = 'Start call';
         joinBtn.disabled = false;
         joinBtn.textContent = 'Join';
         updateButtonPriority();
@@ -1794,7 +1793,7 @@
             console.error('Start room error:', e);
             showToast(getUserMessage(e), { type: 'error' });
             startBtn.disabled = false;
-            startBtn.textContent = '+ Start a Room';
+            startBtn.textContent = 'Start call';
         }
     });
 
@@ -1987,7 +1986,7 @@
         previewContainer.innerHTML = '';
         showScreen('entry');
         startBtn.disabled = false;
-        startBtn.textContent = '+ Start a Room';
+        startBtn.textContent = 'Start call';
         joinBtn.disabled = false;
         joinBtn.textContent = 'Join';
         updateButtonPriority();
