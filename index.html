@@ -1801,34 +1801,42 @@
     function playCallEndedTone() {
         try {
             const ctx = new (window.AudioContext || window.webkitAudioContext)();
-            const gain = ctx.createGain();
-            gain.connect(ctx.destination);
-            gain.gain.setValueAtTime(0.15, ctx.currentTime);
-            gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.4);
+            // Resume context (required by Safari and some Chrome versions)
+            const play = () => {
+                const vol = 0.3;
 
-            // First tone
-            const osc1 = ctx.createOscillator();
-            osc1.type = 'sine';
-            osc1.frequency.setValueAtTime(480, ctx.currentTime);
-            osc1.connect(gain);
-            osc1.start(ctx.currentTime);
-            osc1.stop(ctx.currentTime + 0.15);
+                // First tone (higher)
+                const gain1 = ctx.createGain();
+                gain1.connect(ctx.destination);
+                gain1.gain.setValueAtTime(vol, ctx.currentTime);
+                gain1.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.25);
+                const osc1 = ctx.createOscillator();
+                osc1.type = 'sine';
+                osc1.frequency.value = 480;
+                osc1.connect(gain1);
+                osc1.start(ctx.currentTime);
+                osc1.stop(ctx.currentTime + 0.2);
 
-            // Second tone (lower)
-            const gain2 = ctx.createGain();
-            gain2.connect(ctx.destination);
-            gain2.gain.setValueAtTime(0.12, ctx.currentTime + 0.15);
-            gain2.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.5);
+                // Second tone (lower, after short gap)
+                const gain2 = ctx.createGain();
+                gain2.connect(ctx.destination);
+                gain2.gain.setValueAtTime(vol, ctx.currentTime + 0.2);
+                gain2.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.55);
+                const osc2 = ctx.createOscillator();
+                osc2.type = 'sine';
+                osc2.frequency.value = 360;
+                osc2.connect(gain2);
+                osc2.start(ctx.currentTime + 0.2);
+                osc2.stop(ctx.currentTime + 0.5);
 
-            const osc2 = ctx.createOscillator();
-            osc2.type = 'sine';
-            osc2.frequency.setValueAtTime(360, ctx.currentTime + 0.15);
-            osc2.connect(gain2);
-            osc2.start(ctx.currentTime + 0.15);
-            osc2.stop(ctx.currentTime + 0.4);
+                setTimeout(() => ctx.close(), 700);
+            };
 
-            // Cleanup
-            setTimeout(() => ctx.close(), 600);
+            if (ctx.state === 'suspended') {
+                ctx.resume().then(play);
+            } else {
+                play();
+            }
         } catch (e) {
             // Audio not available, silently ignore
         }
