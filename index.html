@@ -629,13 +629,19 @@
         #mobileFullOverlay.visible { display: flex; }
         .kicked-card {
             background: var(--card);
-            border: 1px solid rgba(255,255,255,0.18);
+            border: 1px solid rgba(255,255,255,0.08);
             border-radius: 12px;
             padding: 32px 28px 24px;
             max-width: 340px;
             width: 90%;
             box-shadow: 0 20px 60px rgba(0,0,0,0.6);
             text-align: center;
+        }
+        .kicked-card .btn {
+            padding: 10px 32px;
+            font-weight: 600;
+            font-size: 14px;
+            box-shadow: none;
         }
         [data-theme="light"] .kicked-card {
             border-color: rgba(0,0,0,0.08);
