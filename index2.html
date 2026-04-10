@@ -209,6 +209,13 @@
         }
         .entry-input:focus { border-color: var(--accent); }
         .entry-input::placeholder { color: var(--muted2); }
+        .entry-input:-webkit-autofill,
+        .entry-input:-webkit-autofill:hover,
+        .entry-input:-webkit-autofill:focus {
+            -webkit-box-shadow: 0 0 0 1000px var(--bg) inset;
+            -webkit-text-fill-color: var(--text);
+            transition: background-color 5000s ease-in-out 0s;
+        }
 
         .name-hint {
             font-size: 12px;
