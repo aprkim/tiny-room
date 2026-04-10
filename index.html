@@ -1291,7 +1291,12 @@
     };
 
     function getUserMessage(error) {
-        return ERROR_MESSAGES[error?.code] || error?.message || 'Something went wrong. Please try again.';
+        if (ERROR_MESSAGES[error?.code]) return ERROR_MESSAGES[error.code];
+        // Catch raw SDK messages about disabled/deleted rooms
+        const msg = (error?.message || '').toLowerCase();
+        if (msg.includes('disabled') || msg.includes('deleted')) return 'This room has been closed.';
+        if (msg.includes('not found')) return 'This room doesn\'t exist or has been removed.';
+        return 'Something went wrong. Please try again.';
     }
 
     // ── Spotlight ──
