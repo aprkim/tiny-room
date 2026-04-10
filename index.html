@@ -1889,9 +1889,9 @@
             await VibeLive.enterByRoomCode(room.room_code);
         } catch (e) {
             console.error('Start room error:', e);
-            showToast(getUserMessage(e), { type: 'error' });
+            showAlert(getUserMessage(e));
             startBtn.disabled = false;
-            startBtn.textContent = '+ Start a Room';
+            startBtn.textContent = 'Start call';
         }
     });
 
@@ -1915,7 +1915,12 @@
             await VibeLive.enterByRoomCode(code);
         } catch (e) {
             console.error('Join room error:', e);
-            showToast(getUserMessage(e), { type: 'error' });
+            const code_ = e?.code || '';
+            if (code_ === 'ROOM_NOT_FOUND' || code_.includes('NOT_FOUND')) {
+                showKickedModal('This room doesn\'t exist or has been removed.');
+            } else {
+                showAlert(getUserMessage(e));
+            }
             joinBtn.disabled = false;
             joinBtn.textContent = 'Join';
         }
