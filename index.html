@@ -1279,7 +1279,10 @@
         SCREENSHARE_UNSUPPORTED: 'Screen sharing isn\'t supported in this browser.',
         SCREENSHARE_UNKNOWN: 'Screen sharing failed. Try again.',
         // Room
-        ROOM_NOT_FOUND: 'This room doesn\'t exist or has been removed.',
+        ROOM_NOT_FOUND: 'This room doesn\'t exist or is no longer available.',
+        ROOM_CLOSED: 'This room is not currently available.',
+        ROOM_FULL: 'This room is full. Please try again later.',
+        ROOM_DISABLED: 'This room is not currently available.',
         ROOM_JOIN_FAILED: 'Couldn\'t join the room. Please try again.',
         ROOM_SFU_UNREACHABLE: 'Can\'t reach the video server. Check your connection.',
         // Network
@@ -1291,12 +1294,7 @@
     };
 
     function getUserMessage(error) {
-        if (ERROR_MESSAGES[error?.code]) return ERROR_MESSAGES[error.code];
-        // Catch raw SDK messages about disabled/deleted rooms
-        const msg = (error?.message || '').toLowerCase();
-        if (msg.includes('disabled') || msg.includes('deleted')) return 'This room has been closed.';
-        if (msg.includes('not found')) return 'This room doesn\'t exist or has been removed.';
-        return 'Something went wrong. Please try again.';
+        return ERROR_MESSAGES[error?.code] || 'Something went wrong. Please try again.';
     }
 
     // ── Spotlight ──
@@ -1719,12 +1717,7 @@
         const camTileId = `tile-${memberId}-camera`;
         let camTile = document.getElementById(camTileId);
 
-        // Safety: create tile if it doesn't exist yet (race condition)
-        if (!camTile && memberId !== VibeLive.memberId && state.status !== 'EXITED') {
-            const m = VibeLive.getMember(memberId);
-            camTile = createTile(memberId, m?.displayName || 'Remote', 'camera', false);
-        }
-
+        // Rule 10: never auto-create tiles here — tile creation only in remoteStreamStart
         if (camTile) {
             // LIVE badge
             const badge = camTile.querySelector('.status-badge');
@@ -1859,7 +1852,7 @@
         showScreen('entry');
         // Reset entry buttons
         startBtn.disabled = false;
-        startBtn.textContent = '+ Start a Room';
+        startBtn.textContent = 'Start call';
         joinBtn.disabled = false;
         joinBtn.textContent = 'Join';
         updateButtonPriority();
@@ -2098,13 +2091,13 @@
         previewContainer.innerHTML = '';
         showScreen('entry');
         startBtn.disabled = false;
-        startBtn.textContent = '+ Start a Room';
+        startBtn.textContent = 'Start call';
         joinBtn.disabled = false;
         joinBtn.textContent = 'Join';
         updateButtonPriority();
         const rawMsg = (message || '').toLowerCase();
-        if (rawMsg.includes('disabled') || rawMsg.includes('deleted') || rawMsg.includes('removed')) {
-            showKickedModal('This room has been closed.');
+        if (rawMsg.includes('disabled') || rawMsg.includes('deleted') || rawMsg.includes('closed')) {
+            showKickedModal('This room is not currently available.');
         } else {
             showKickedModal('You were removed from the room by the host.');
         }
@@ -2139,7 +2132,7 @@
         const { code, message, hint, retriable } = error || {};
 
         // Dev bugs — log only, never show to users
-        if (code && (code.startsWith('INIT_') || code.startsWith('STATE_'))) {
+        if (code && (code.startsWith('INIT_') || code.startsWith('STATE_') || code === 'INVALID_PARAM')) {
             console.error(`[DEV BUG] [${context}] ${code}: ${message}`);
             return;
         }
@@ -2154,6 +2147,26 @@
         if (code === 'ROOM_KICKED') {
             tearDown();
             showKickedModal('You were removed from this room.');
+            return;
+        }
+
+        // Room closed/disabled — redirect to entry
+        if (code === 'ROOM_CLOSED' || code === 'ROOM_DISABLED') {
+            tearDown();
+            showKickedModal('This room is not currently available.');
+            return;
+        }
+
+        // Room full — show waiting message
+        if (code === 'ROOM_FULL') {
+            showToast('This room is full. Please try again later.', {
+                type: 'error',
+                action: 'Retry',
+                onAction: () => {
+                    const roomCode = codeInput.value.trim();
+                    if (roomCode) VibeLive.enterByRoomCode(roomCode);
+                }
+            });
             return;
         }
 
@@ -2195,7 +2208,7 @@
             return;
         }
 
-        // Non-retriable — show persistent alert (friendly message only)
+        // Non-retriable — show auto-dismiss alert
         showAlert(userMsg);
     });
 
