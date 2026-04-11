@@ -2022,6 +2022,9 @@
 
         createTile(VibeLive.memberId, selfName, 'camera', true);
         createTile(VibeLive.memberId, selfName, 'screenshare', true);
+        // Read state explicitly to catch any memberStateChange that fired before tiles existed
+        const localState = VibeLive.getMemberState(VibeLive.memberId);
+        if (localState) updateTileFromState(VibeLive.memberId, localState);
 
         // Move local camera tile to preview area for pre-live
         const localCamTile = document.getElementById(`tile-${VibeLive.memberId}-camera`);
@@ -2051,8 +2054,9 @@
     VibeLive.on('remoteStreamStart', (memberId, streamType) => {
         const m = VibeLive.getMember(memberId);
         createTile(memberId, m?.displayName || 'Remote', streamType, false);
-        // registerTile (inside createTile) handles video element registration.
-        // memberStateChange handles indicators. Nothing else needed.
+        // Read state explicitly to catch any memberStateChange that fired before tile existed
+        const state = VibeLive.getMemberState(memberId);
+        if (state) updateTileFromState(memberId, state);
     });
 
     // RECOMMENDED: localJoined -- transition to live screen
