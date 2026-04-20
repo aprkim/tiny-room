@@ -1796,6 +1796,47 @@
     }
 
     // ── Call Ended Tone ──
+    // ── Participant Joined Tone (plays only when going from solo to 2 people) ──
+    let participantJoinedOnce = false;
+
+    function playParticipantJoinedTone() {
+        try {
+            const ctx = new (window.AudioContext || window.webkitAudioContext)();
+            const play = () => {
+                const vol = 0.25;
+                // Ascending two-tone: 440Hz → 660Hz (friendlier, opposite of call ended)
+                const gain1 = ctx.createGain();
+                gain1.connect(ctx.destination);
+                gain1.gain.setValueAtTime(vol, ctx.currentTime);
+                gain1.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.2);
+                const osc1 = ctx.createOscillator();
+                osc1.type = 'sine';
+                osc1.frequency.value = 440;
+                osc1.connect(gain1);
+                osc1.start(ctx.currentTime);
+                osc1.stop(ctx.currentTime + 0.15);
+
+                const gain2 = ctx.createGain();
+                gain2.connect(ctx.destination);
+                gain2.gain.setValueAtTime(vol, ctx.currentTime + 0.15);
+                gain2.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.45);
+                const osc2 = ctx.createOscillator();
+                osc2.type = 'sine';
+                osc2.frequency.value = 660;
+                osc2.connect(gain2);
+                osc2.start(ctx.currentTime + 0.15);
+                osc2.stop(ctx.currentTime + 0.4);
+
+                setTimeout(() => ctx.close(), 600);
+            };
+            if (ctx.state === 'suspended') {
+                ctx.resume().then(play);
+            } else {
+                play();
+            }
+        } catch (e) {}
+    }
+
     function playCallEndedTone() {
         try {
             const ctx = new (window.AudioContext || window.webkitAudioContext)();
@@ -1843,6 +1884,7 @@
     // ── Shared Teardown ──
     function tearDown() {
         playCallEndedTone();
+        participantJoinedOnce = false;
         VibeLive.exitRoom(); // SDK auto-removes all registered tiles
         // Clean up any floating tiles
         document.querySelectorAll('.video-tile.floating').forEach(t => t.remove());
@@ -2050,6 +2092,11 @@
         // Read state explicitly to catch any memberStateChange that fired before tile existed
         const state = VibeLive.getMemberState(memberId);
         if (state) updateTileFromState(memberId, state);
+        // Beep only when the first remote participant joins this session (camera stream)
+        if (streamType === 'camera' && !participantJoinedOnce) {
+            participantJoinedOnce = true;
+            playParticipantJoinedTone();
+        }
     });
 
     // RECOMMENDED: localJoined -- transition to live screen
