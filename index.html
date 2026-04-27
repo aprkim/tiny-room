@@ -1266,6 +1266,9 @@
         AUTH_TOKEN_REFRESH_FAILED: 'Connection issue. Please sign in again.',
         AUTH_PROXY_FAILED: 'Unable to connect. Please try again.',
         AUTH_FORBIDDEN: 'Unable to connect. Please try again later.',
+        // Project (account-level)
+        PROJECT_UNAVAILABLE: 'This service is not currently available.',
+        ACCOUNT_LIMIT_REACHED: 'The service is busy right now. Please try again later.',
         // Media
         MEDIA_PERMISSION_DENIED: 'Camera/mic access was blocked. Check your browser permissions.',
         MEDIA_DEVICE_BUSY: 'Your camera is being used by another app. Close it and try again.',
@@ -1293,7 +1296,27 @@
         NETWORK_WS_DISCONNECTED: 'Connection lost. Reconnecting...',
     };
 
+    // Subcode-based messages (more specific when server provides a subcode)
+    const SUBCODE_MESSAGES = {
+        // AUTH_FORBIDDEN subcodes (most are dev/infra issues)
+        origin_not_whitelisted: 'This site is not authorized to use this service.',
+        room_creation_not_allowed: 'Creating rooms isn\'t allowed on this account.',
+        // ROOM_NOT_FOUND subcodes
+        context_mismatch: 'This room belongs to a different service.',
+        // ROOM_CLOSED subcodes
+        room_pending: 'This room hasn\'t opened yet.',
+        // ACCOUNT_LIMIT_REACHED subcodes
+        room_limit_reached: 'Too many rooms are open right now. Please try again in a moment.',
+        account_limit_reached: 'Too many people are using the service right now. Please try again in a moment.',
+        // PROJECT_UNAVAILABLE subcodes
+        project_expired: 'This service\'s trial period has ended.',
+        project_archived: 'This service is no longer available.',
+        project_disabled: 'This service is currently unavailable.',
+    };
+
     function getUserMessage(error) {
+        // Prefer subcode-specific message when available
+        if (error?.subcode && SUBCODE_MESSAGES[error.subcode]) return SUBCODE_MESSAGES[error.subcode];
         return ERROR_MESSAGES[error?.code] || 'Something went wrong. Please try again.';
     }
 
@@ -2200,13 +2223,33 @@
         // Room closed/disabled — redirect to entry
         if (code === 'ROOM_CLOSED' || code === 'ROOM_DISABLED') {
             tearDown();
-            showKickedModal('This room is not currently available.');
+            showKickedModal(getUserMessage(error));
             return;
         }
 
-        // Room full — show waiting message
+        // Room full — show waiting message with retry
         if (code === 'ROOM_FULL') {
-            showToast('This room is full. Please try again later.', {
+            showToast(getUserMessage(error), {
+                type: 'error',
+                action: 'Retry',
+                onAction: () => {
+                    const roomCode = codeInput.value.trim();
+                    if (roomCode) VibeLive.enterByRoomCode(roomCode);
+                }
+            });
+            return;
+        }
+
+        // Project unavailable — service-level issue, redirect to entry
+        if (code === 'PROJECT_UNAVAILABLE') {
+            tearDown();
+            showKickedModal(getUserMessage(error));
+            return;
+        }
+
+        // Account-level capacity reached — show retry
+        if (code === 'ACCOUNT_LIMIT_REACHED') {
+            showToast(getUserMessage(error), {
                 type: 'error',
                 action: 'Retry',
                 onAction: () => {
