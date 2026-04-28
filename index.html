@@ -1821,6 +1821,8 @@
     // ── Call Ended Tone ──
     // ── Participant Joined Tone (plays only when going from solo to 2 people) ──
     let participantJoinedOnce = false;
+    // Dedupe kicked handling (kicked event + ROOM_KICKED error fire together)
+    let kickHandled = false;
 
     function playParticipantJoinedTone() {
         try {
@@ -1908,6 +1910,7 @@
     function tearDown() {
         playCallEndedTone();
         participantJoinedOnce = false;
+        kickHandled = false;
         VibeLive.exitRoom(); // SDK auto-removes all registered tiles
         // Clean up any floating tiles
         document.querySelectorAll('.video-tile.floating').forEach(t => t.remove());
@@ -1935,7 +1938,7 @@
 
     $('mobileFullOkBtn').addEventListener('click', () => {
         $('mobileFullOverlay').classList.remove('visible');
-        tearDown();
+        // tearDown already called when modal shown
     });
 
     // ── Entry Actions ──
@@ -2068,6 +2071,7 @@
         if (activeMembers.length > maxParticipants) {
             if (isMobile) {
                 $('mobileFullOverlay').classList.add('visible');
+                tearDown();
             } else {
                 showAlert(`This room is full (max ${maxParticipants} participants).`);
                 tearDown();
@@ -2155,16 +2159,9 @@
 
     // RECOMMENDED: kicked -- show message, exitRoom, return to entry
     VibeLive.on('kicked', (message) => {
-        VibeLive.exitRoom(); // SDK auto-removes all registered tiles
-        cameraGrid.innerHTML = '';
-        screenshareGrid.innerHTML = '';
-        previewContainer.innerHTML = '';
-        showScreen('entry');
-        startBtn.disabled = false;
-        startBtn.textContent = 'Start call';
-        joinBtn.disabled = false;
-        joinBtn.textContent = 'Join';
-        updateButtonPriority();
+        if (kickHandled) return;
+        kickHandled = true;
+        tearDown(); // Full cleanup including floating tiles
         const rawMsg = (message || '').toLowerCase();
         if (rawMsg.includes('disabled') || rawMsg.includes('deleted') || rawMsg.includes('closed')) {
             showKickedModal('This room is not currently available.');
@@ -2213,8 +2210,10 @@
         // Always log full debug info to console
         console.warn(`[VibeLive] [${context}] ${code}: ${message}`, hint);
 
-        // Kicked — special UX flow
+        // Kicked — primary handler is on('kicked'); dedupe here
         if (code === 'ROOM_KICKED') {
+            if (kickHandled) return;
+            kickHandled = true;
             tearDown();
             showKickedModal('You were removed from this room.');
             return;
@@ -2311,6 +2310,12 @@
     // but floating tiles (on document.body) need manual cleanup
     VibeLive.on('remoteLeft', (memberId) => {
         document.querySelectorAll(`.video-tile.floating[data-member-id="${memberId}"]`).forEach(t => t.remove());
+        updateGridLayout();
+    });
+
+    // Screenshare ended (member stays) — clean up floating screenshare tile only
+    VibeLive.on('remoteStreamEnd', (memberId, streamType) => {
+        document.querySelectorAll(`.video-tile.floating[data-member-id="${memberId}"][data-stream-type="${streamType}"]`).forEach(t => t.remove());
         updateGridLayout();
     });
 
