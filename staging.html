@@ -2306,12 +2306,16 @@
     }
 
     async function loadChatHistory() {
+        if (typeof VibeLive.getMessages !== 'function') {
+            console.warn('VibeLive.getMessages not available — chat disabled');
+            chatBtn.style.display = 'none';
+            return;
+        }
         const channelId = VibeLive.channel?.id;
         if (!channelId) return;
         try {
             const messages = await VibeLive.getMessages(channelId, { count: 50 });
-            // newest first → reverse for chronological display
-            const chronological = [...messages].reverse();
+            const chronological = [...(messages || [])].reverse();
             if (chronological.length === 0) {
                 chatMessages.innerHTML = '<div class="chat-empty">No messages yet. Say hi!</div>';
             } else {
@@ -2320,6 +2324,7 @@
             }
         } catch (e) {
             console.error('Chat history load failed:', e);
+            // Don't break the join flow — chat just won't have history
         }
     }
 
@@ -2424,8 +2429,8 @@
         await VibeLive.setAudio(true);
         updatePreLiveControls();
 
-        // Load chat history for this channel
-        loadChatHistory();
+        // Load chat history for this channel (non-blocking, errors swallowed)
+        try { loadChatHistory(); } catch (e) { console.error('loadChatHistory threw:', e); }
     });
 
     // REQUIRED: memberStateChange -- unified state for ALL members
