@@ -2366,16 +2366,23 @@
         }
     });
 
-    // Real-time incoming messages
-    if (typeof VibeLive.setOnMessage === 'function') {
-        VibeLive.setOnMessage((msg) => {
-            // Only handle channel-wide messages for our current channel
-            const channelId = VibeLive.channel?.id;
-            if (!channelId) return;
-            if (msg.target_type === 'channel' && msg.target_id === channelId) {
-                appendChatMessage(msg);
-            }
-        });
+    // Real-time incoming messages — register inside channelSelected (after auth)
+    let chatRealtimeRegistered = false;
+    function registerChatRealtime() {
+        if (chatRealtimeRegistered) return;
+        if (typeof VibeLive.setOnMessage !== 'function') return;
+        try {
+            VibeLive.setOnMessage((msg) => {
+                const channelId = VibeLive.channel?.id;
+                if (!channelId) return;
+                if (msg.target_type === 'channel' && msg.target_id === channelId) {
+                    appendChatMessage(msg);
+                }
+            });
+            chatRealtimeRegistered = true;
+        } catch (e) {
+            console.warn('setOnMessage failed:', e);
+        }
     }
 
     // Esc to close chat
@@ -2429,7 +2436,8 @@
         await VibeLive.setAudio(true);
         updatePreLiveControls();
 
-        // Load chat history for this channel (non-blocking, errors swallowed)
+        // Load chat history + register real-time handler (non-blocking, errors swallowed)
+        try { registerChatRealtime(); } catch (e) { console.error('registerChatRealtime threw:', e); }
         try { loadChatHistory(); } catch (e) { console.error('loadChatHistory threw:', e); }
     });
 
