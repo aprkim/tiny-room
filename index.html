@@ -1156,7 +1156,11 @@
     'use strict';
 
     // ── Init ──
-    VibeLive.init({ projectId: 'vlp_1eZR3nR43ETF', projectKey: 'vlk_HrA3D0oiW6cTlrPsD0NIGmsy' });
+    VibeLive.init({
+        projectId: 'trial_l4XbDVN2wIZx',
+        projectKey: 'vlk_HrA3D0oiW6cTlrPsD0NIGmsy',
+        features: { showMemberQuality: true, showLocalQuality: true },
+    });
 
     // ── DOM refs ──
     const $ = (id) => document.getElementById(id);
