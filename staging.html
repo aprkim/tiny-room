@@ -981,7 +981,7 @@
 
         .chat-panel {
             position: fixed;
-            top: 0;
+            top: 24px; /* below staging banner; in prod becomes 0 */
             right: 0;
             bottom: 0;
             width: 360px;
@@ -1114,7 +1114,20 @@
         .chat-send:disabled { opacity: 0.4; cursor: not-allowed; }
 
         @media (max-width: 640px) {
-            .chat-panel { width: 100%; }
+            .chat-panel { width: 100%; border-left: none; }
+            .chat-header { padding: 12px 14px; }
+            .chat-messages { padding: 10px 12px; gap: 8px; }
+            .chat-input-row { padding: 10px 12px; gap: 6px; }
+            .chat-input { font-size: 16px; padding: 12px 14px; } /* 16px prevents iOS zoom */
+            .chat-send { width: 44px; height: 44px; }
+            .chat-close { padding: 8px; }
+            .chat-close svg { width: 22px; height: 22px; }
+            .chat-msg-bubble { font-size: 14px; padding: 9px 13px; }
+            .chat-msg { max-width: 90%; }
+            /* Chat button in topbar — icon-only on mobile to save space */
+            #chatBtn .chat-btn-label { display: none; }
+            #chatBtn { padding: 4px 8px; }
+            .chat-unread-badge { font-size: 9px; min-width: 14px; height: 14px; line-height: 14px; top: -3px; right: -3px; }
         }
 
         /* Toast Notifications */
@@ -1229,7 +1242,7 @@
         </button>
         <button class="topbar-btn" id="chatBtn" title="Chat">
             <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
-            Chat
+            <span class="chat-btn-label">Chat</span>
             <span class="chat-unread-badge" id="chatUnreadBadge"></span>
         </button>
     </div>
