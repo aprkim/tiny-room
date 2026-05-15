@@ -958,6 +958,195 @@
             }
         }
 
+        /* ── Chat: floating draggable panel ── */
+        #chatBtn { position: relative; }
+        #chatBtn.active, #chatBtn[data-active="true"] {
+            background: var(--accentSoft);
+            border-color: var(--accent);
+            color: var(--accent);
+        }
+        .chat-unread-dot {
+            position: absolute;
+            top: 4px;
+            right: 4px;
+            width: 10px;
+            height: 10px;
+            background: var(--accent);
+            border: 2px solid var(--card);
+            border-radius: 50%;
+        }
+        .chat-unread-dot.hidden { display: none; }
+
+        .message-channel {
+            position: fixed;
+            width: 360px;
+            height: 500px;
+            right: 40px;
+            bottom: 120px;
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            box-shadow: 0 8px 32px rgba(0,0,0,0.22);
+            z-index: 9998;
+            display: flex;
+            flex-direction: column;
+            resize: both;
+            overflow: hidden;
+            min-width: 280px;
+            min-height: 320px;
+            max-width: 100vw;
+            max-height: 100dvh;
+        }
+        .message-channel.hidden { display: none; }
+
+        .channel-header {
+            padding: 12px 16px;
+            background: var(--soft);
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            cursor: move;
+            flex-shrink: 0;
+        }
+        .channel-title {
+            font-weight: 700;
+            font-size: 14px;
+            color: var(--text);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .channel-title svg { width: 16px; height: 16px; stroke: var(--accent); }
+        .close-channel-btn {
+            background: none;
+            border: none;
+            color: var(--muted);
+            cursor: pointer;
+            padding: 4px;
+            width: 26px;
+            height: 26px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 6px;
+            transition: background 0.15s, color 0.15s;
+        }
+        .close-channel-btn svg { width: 16px; height: 16px; }
+        .close-channel-btn:hover { background: var(--border); color: var(--text); }
+
+        .channel-messages {
+            flex: 1;
+            overflow-y: auto;
+            padding: 14px 16px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        .chat-message {
+            padding: 8px 12px;
+            border-radius: 12px;
+            max-width: 85%;
+            font-size: 13px;
+            line-height: 1.45;
+            word-break: break-word;
+            white-space: pre-wrap;
+        }
+        .chat-message p { margin: 0; }
+        .chat-message .msg-author {
+            display: block;
+            font-size: 11px;
+            font-weight: 700;
+            margin-bottom: 2px;
+            opacity: 0.75;
+        }
+        .user-message {
+            background: var(--accent);
+            color: #fff;
+            align-self: flex-end;
+        }
+        .partner-message {
+            background: var(--soft);
+            border: 1px solid var(--border);
+            color: var(--text);
+            align-self: flex-start;
+        }
+        .system-message {
+            background: var(--accentSoft);
+            color: var(--muted);
+            align-self: center;
+            font-size: 12px;
+            padding: 5px 12px;
+            border-radius: 999px;
+        }
+        .chat-message a { color: inherit; text-decoration: underline; word-break: break-all; }
+
+        .chat-input-container {
+            padding: 12px 14px;
+            border-top: 1px solid var(--border);
+            display: flex;
+            gap: 8px;
+            flex-shrink: 0;
+        }
+        .chat-input {
+            flex: 1;
+            min-width: 0;
+            padding: 10px 14px;
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            background: var(--soft);
+            color: var(--text);
+            font-size: 14px;
+            font-family: var(--sans);
+            outline: none;
+            transition: border-color 0.15s, box-shadow 0.15s;
+        }
+        .chat-input:focus {
+            border-color: var(--accent);
+            box-shadow: 0 0 0 3px rgba(14,165,164,0.15);
+        }
+        .send-btn {
+            flex-shrink: 0;
+            width: 40px;
+            height: 40px;
+            background: var(--accent);
+            color: #fff;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background 0.15s, opacity 0.15s;
+        }
+        .send-btn svg { width: 18px; height: 18px; }
+        .send-btn:hover:not(:disabled) { background: var(--accentHover); }
+        .send-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+        /* Mobile: full-screen, not draggable/resizable */
+        @media (max-width: 640px) {
+            .message-channel {
+                inset: 0 !important;
+                width: 100% !important;
+                height: 100dvh !important;
+                right: auto;
+                bottom: auto;
+                border: none;
+                border-radius: 0;
+                resize: none;
+                max-width: none;
+                max-height: none;
+            }
+            .channel-header { cursor: default; padding: 14px 16px; }
+            .channel-messages { padding: 12px 14px; }
+            .chat-input-container { padding: 12px 14px; }
+            .chat-input { font-size: 16px; padding: 12px 14px; } /* 16px prevents iOS zoom */
+            .send-btn { width: 44px; height: 44px; }
+            .close-channel-btn { width: 32px; height: 32px; }
+            .close-channel-btn svg { width: 20px; height: 20px; }
+            .chat-message { font-size: 14px; max-width: 90%; }
+        }
+
         /* Toast Notifications */
         #toastContainer {
             position: fixed;
@@ -1068,6 +1257,26 @@
     </div>
 </div>
 
+<!-- Chat: floating draggable message channel -->
+<div class="message-channel hidden" id="messageChannel">
+    <div class="channel-header" id="channelHeader">
+        <span class="channel-title">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+            Messages
+        </span>
+        <button class="close-channel-btn" id="closeChannelBtn" title="Close" aria-label="Close chat">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        </button>
+    </div>
+    <div class="channel-messages" id="channelMessages"></div>
+    <form class="chat-input-container" id="chatForm">
+        <input type="text" id="channelInput" class="chat-input" placeholder="Type a message…" maxlength="500" autocomplete="off">
+        <button type="submit" class="send-btn" id="sendChannelMessage" title="Send" aria-label="Send">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+        </button>
+    </form>
+</div>
+
 <!-- Entry Screen -->
 <div id="entryScreen">
     <div class="entry-inner">
@@ -1124,6 +1333,10 @@
         </button>
         <button class="ctrl-btn hide-on-mobile" id="liveToggleScreen" title="Share screen">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
+        </button>
+        <button class="ctrl-btn" id="chatBtn" title="Chat" data-active="false">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+            <span class="chat-unread-dot hidden" id="chatUnreadDot"></span>
         </button>
         <button class="ctrl-btn danger" id="leaveBtn" title="Leave room">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
@@ -1921,6 +2134,9 @@
         cameraGrid.innerHTML = '';
         screenshareGrid.innerHTML = '';
         previewContainer.innerHTML = '';
+        // Reset chat state
+        if (typeof closeChat === 'function') closeChat();
+        if (typeof clearChat === 'function') clearChat();
         showScreen('entry');
         // Reset entry buttons
         startBtn.disabled = false;
@@ -2057,6 +2273,200 @@
         document.querySelectorAll('.video-tile.floating').forEach(tile => resetTile(tile));
     });
 
+    // ── Chat: floating draggable message channel ──
+    const messageChannel = $('messageChannel');
+    const channelHeader = $('channelHeader');
+    const channelMessages = $('channelMessages');
+    const channelInput = $('channelInput');
+    const chatForm = $('chatForm');
+    const sendChannelBtn = $('sendChannelMessage');
+    const chatBtn = $('chatBtn');
+    const chatUnreadDot = $('chatUnreadDot');
+    let chatMessageIds = new Set();   // dedupe by pid
+    let systemMsgShown = false;
+
+    function isChatHidden() { return messageChannel.classList.contains('hidden'); }
+
+    // Turn URLs into safe clickable links — DOM nodes only, never innerHTML (XSS-safe)
+    function appendLinkified(el, text) {
+        const urlRe = /(https?:\/\/[^\s]+)/g;
+        let lastIndex = 0, match;
+        while ((match = urlRe.exec(text)) !== null) {
+            if (match.index > lastIndex)
+                el.appendChild(document.createTextNode(text.slice(lastIndex, match.index)));
+            const a = document.createElement('a');
+            a.href = match[0];
+            a.textContent = match[0];
+            a.target = '_blank';
+            a.rel = 'noopener noreferrer';
+            el.appendChild(a);
+            lastIndex = match.index + match[0].length;
+        }
+        if (lastIndex < text.length)
+            el.appendChild(document.createTextNode(text.slice(lastIndex)));
+    }
+
+    // Render a message bubble. type: 'user' | 'partner' | 'system'
+    function addChannelMessage(text, type, author) {
+        const el = document.createElement('div');
+        el.className = `chat-message ${type}-message`;
+        if (type === 'partner' && author) {
+            const a = document.createElement('span');
+            a.className = 'msg-author';
+            a.textContent = author;
+            el.appendChild(a);
+        }
+        const p = document.createElement('p');
+        appendLinkified(p, text);
+        el.appendChild(p);
+        channelMessages.appendChild(el);
+        channelMessages.scrollTop = channelMessages.scrollHeight;
+    }
+
+    function getMyUserId() {
+        return VibeLive.user?.pid || VibeLive.user?.id || null;
+    }
+
+    // For history: include isSelf check (history contains your own past messages)
+    function appendHistoryMessage(msg) {
+        if (!msg || !msg.pid || chatMessageIds.has(msg.pid)) return;
+        chatMessageIds.add(msg.pid);
+        const myId = getMyUserId();
+        const isSelf = myId && msg.owner_id === myId;
+        if (isSelf) {
+            addChannelMessage(msg.content, 'user');
+        } else {
+            const author = msg.sender_display_name || msg.owner_username || 'Someone';
+            addChannelMessage(msg.content, 'partner', author);
+        }
+    }
+
+    // For real-time: SDK guarantees this only fires for OTHERS' messages
+    // — so we don't need isSelf detection, just dedup
+    function appendIncomingMessage(msg) {
+        if (!msg || (msg.pid && chatMessageIds.has(msg.pid))) return;
+        if (msg.pid) chatMessageIds.add(msg.pid);
+        const author = msg.sender_display_name || msg.owner_username || 'Someone';
+        addChannelMessage(msg.content, 'partner', author);
+        if (isChatHidden()) chatUnreadDot.classList.remove('hidden');
+    }
+
+    function clearChat() {
+        channelMessages.innerHTML = '';
+        chatMessageIds.clear();
+        systemMsgShown = false;
+        chatUnreadDot.classList.add('hidden');
+    }
+
+    async function loadChatHistory() {
+        if (typeof VibeLive.getMessages !== 'function') {
+            console.warn('VibeLive.getMessages not available — chat disabled');
+            chatBtn.style.display = 'none';
+            return;
+        }
+        const channelId = VibeLive.channel?.id;
+        if (!channelId) return;
+        if (!systemMsgShown) {
+            addChannelMessage('Chat started', 'system');
+            systemMsgShown = true;
+        }
+        try {
+            const messages = await VibeLive.getMessages(channelId, { count: 50 });
+            // API returns newest-first → render oldest-first
+            [...(messages || [])].reverse().forEach(appendHistoryMessage);
+        } catch (e) {
+            console.error('Chat history load failed:', e);
+            // Don't break the join flow — chat just won't have history
+        }
+    }
+
+    function openChat() {
+        messageChannel.classList.remove('hidden');
+        chatBtn.dataset.active = 'true';
+        chatUnreadDot.classList.add('hidden');
+        if (window.matchMedia('(max-width: 640px)').matches === false) {
+            setTimeout(() => channelInput.focus(), 100);
+        }
+    }
+
+    function closeChat() {
+        messageChannel.classList.add('hidden');
+        chatBtn.dataset.active = 'false';
+    }
+
+    chatBtn.addEventListener('click', () => isChatHidden() ? openChat() : closeChat());
+    $('closeChannelBtn').addEventListener('click', closeChat);
+
+    chatForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const text = channelInput.value.trim();
+        if (!text) return;
+        const channelId = VibeLive.channel?.id;
+        if (!channelId) return;
+
+        channelInput.value = '';
+        sendChannelBtn.disabled = true;
+        try {
+            const created = await VibeLive.sendMessage(channelId, text);
+            // sendMessage doesn't echo back — render our own message locally
+            if (created && created.pid) chatMessageIds.add(created.pid);
+            addChannelMessage(text, 'user');
+        } catch (err) {
+            console.error('sendMessage failed:', err);
+            addChannelMessage(text, 'user'); // still show locally so the user isn't lost
+            showToast('Message may not have sent. Please check your connection.', { type: 'error' });
+        } finally {
+            sendChannelBtn.disabled = false;
+            channelInput.focus();
+        }
+    });
+
+    // Drag the panel by its header (desktop only — mobile is full-screen)
+    function makeDraggable(element, handle) {
+        let pos1 = 0, pos2 = 0, pos3 = 0, pos4 = 0;
+        handle.addEventListener('mousedown', (e) => {
+            if (window.matchMedia('(max-width: 640px)').matches) return; // no drag on mobile
+            if (e.target.closest('.close-channel-btn')) return;
+            e.preventDefault();
+            pos3 = e.clientX; pos4 = e.clientY;
+            document.onmouseup = () => { document.onmouseup = null; document.onmousemove = null; };
+            document.onmousemove = (ev) => {
+                ev.preventDefault();
+                pos1 = pos3 - ev.clientX; pos2 = pos4 - ev.clientY;
+                pos3 = ev.clientX; pos4 = ev.clientY;
+                element.style.top = (element.offsetTop - pos2) + 'px';
+                element.style.left = (element.offsetLeft - pos1) + 'px';
+                element.style.right = 'auto';
+                element.style.bottom = 'auto';
+            };
+        });
+    }
+    makeDraggable(messageChannel, channelHeader);
+
+    // Real-time incoming messages — register inside channelSelected (after auth)
+    let chatRealtimeRegistered = false;
+    function registerChatRealtime() {
+        if (chatRealtimeRegistered) return;
+        if (typeof VibeLive.setOnMessage !== 'function') return;
+        try {
+            VibeLive.setOnMessage((msg) => {
+                const channelId = VibeLive.channel?.id;
+                if (!channelId) return;
+                // Ignore channel messages not for this channel
+                if (msg.target_type === 'channel' && msg.target_id !== channelId) return;
+                appendIncomingMessage(msg);
+            });
+            chatRealtimeRegistered = true;
+        } catch (e) {
+            console.warn('setOnMessage failed:', e);
+        }
+    }
+
+    // Esc to close chat
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape' && !isChatHidden()) closeChat();
+    });
+
     // ════════════════════════════════════════════
     // ── VibeLive Events ──
     // ════════════════════════════════════════════
@@ -2102,6 +2512,10 @@
         await VibeLive.setVideo(true);
         await VibeLive.setAudio(true);
         updatePreLiveControls();
+
+        // Load chat history + register real-time handler (non-blocking, errors swallowed)
+        try { registerChatRealtime(); } catch (e) { console.error('registerChatRealtime threw:', e); }
+        try { loadChatHistory(); } catch (e) { console.error('loadChatHistory threw:', e); }
     });
 
     // REQUIRED: memberStateChange -- unified state for ALL members
