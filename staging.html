@@ -959,129 +959,134 @@
             }
         }
 
-        /* ── Chat Panel ── */
-        .chat-unread-badge {
-            display: none;
-            position: absolute;
-            top: -4px;
-            right: -4px;
-            min-width: 16px;
-            height: 16px;
-            padding: 0 4px;
-            background: var(--accent);
-            color: #fff;
-            font-size: 10px;
-            font-weight: 700;
-            border-radius: 8px;
-            line-height: 16px;
-            text-align: center;
-        }
-        .chat-unread-badge.visible { display: inline-block; }
+        /* ── Chat: floating draggable panel ── */
         #chatBtn { position: relative; }
+        .chat-unread-dot {
+            position: absolute;
+            top: 2px;
+            right: 2px;
+            width: 9px;
+            height: 9px;
+            background: var(--accent);
+            border: 2px solid var(--card);
+            border-radius: 50%;
+        }
+        .chat-unread-dot.hidden { display: none; }
 
-        .chat-panel {
+        .message-channel {
             position: fixed;
-            top: 24px; /* below staging banner; in prod becomes 0 */
-            right: 0;
-            bottom: 0;
             width: 360px;
-            max-width: 100%;
+            height: 500px;
+            right: 40px;
+            bottom: 120px;
             background: var(--card);
-            border-left: 1px solid var(--border);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            box-shadow: 0 8px 32px rgba(0,0,0,0.22);
+            z-index: 9998;
             display: flex;
             flex-direction: column;
-            z-index: 9998;
-            transform: translateX(100%);
-            transition: transform 0.25s ease;
-            box-shadow: -8px 0 32px rgba(0,0,0,0.15);
+            resize: both;
+            overflow: hidden;
+            min-width: 280px;
+            min-height: 320px;
+            max-width: 100vw;
+            max-height: 100dvh;
         }
-        .chat-panel.open { transform: translateX(0); }
+        .message-channel.hidden { display: none; }
 
-        .chat-header {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            padding: 14px 16px;
+        .channel-header {
+            padding: 12px 16px;
+            background: var(--soft);
             border-bottom: 1px solid var(--border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            cursor: move;
             flex-shrink: 0;
         }
-        .chat-title {
-            font-size: 14px;
+        .channel-title {
             font-weight: 700;
+            font-size: 14px;
             color: var(--text);
+            display: flex;
+            align-items: center;
+            gap: 8px;
         }
-        .chat-close {
-            background: transparent;
+        .channel-title svg { width: 16px; height: 16px; stroke: var(--accent); }
+        .close-channel-btn {
+            background: none;
             border: none;
             color: var(--muted);
             cursor: pointer;
             padding: 4px;
-            border-radius: 6px;
+            width: 26px;
+            height: 26px;
             display: flex;
             align-items: center;
             justify-content: center;
-            transition: color 0.15s, background 0.15s;
+            border-radius: 6px;
+            transition: background 0.15s, color 0.15s;
         }
-        .chat-close:hover { color: var(--text); background: var(--soft); }
+        .close-channel-btn svg { width: 16px; height: 16px; }
+        .close-channel-btn:hover { background: var(--border); color: var(--text); }
 
-        .chat-messages {
+        .channel-messages {
             flex: 1;
             overflow-y: auto;
-            padding: 12px 16px;
+            padding: 14px 16px;
             display: flex;
             flex-direction: column;
             gap: 10px;
         }
-        .chat-empty {
-            color: var(--muted2);
-            font-size: 13px;
-            text-align: center;
-            padding: 20px 12px;
-            font-style: italic;
-        }
-        .chat-msg {
-            display: flex;
-            flex-direction: column;
-            gap: 2px;
-            max-width: 85%;
-            align-self: flex-start;
-        }
-        .chat-msg.self { align-self: flex-end; align-items: flex-end; }
-        .chat-msg-meta {
-            font-size: 11px;
-            color: var(--muted);
-            display: flex;
-            gap: 6px;
-            padding: 0 4px;
-        }
-        .chat-msg-author { font-weight: 600; color: var(--text); }
-        .chat-msg-time { color: var(--muted2); }
-        .chat-msg-bubble {
-            background: var(--soft);
-            color: var(--text);
+        .chat-message {
             padding: 8px 12px;
             border-radius: 12px;
+            max-width: 85%;
             font-size: 13px;
-            line-height: 1.4;
-            word-wrap: break-word;
+            line-height: 1.45;
+            word-break: break-word;
             white-space: pre-wrap;
-            border: 1px solid var(--border);
         }
-        .chat-msg.self .chat-msg-bubble {
+        .chat-message p { margin: 0; }
+        .chat-message .msg-author {
+            display: block;
+            font-size: 11px;
+            font-weight: 700;
+            margin-bottom: 2px;
+            opacity: 0.75;
+        }
+        .user-message {
             background: var(--accent);
             color: #fff;
-            border-color: var(--accent);
+            align-self: flex-end;
         }
+        .partner-message {
+            background: var(--soft);
+            border: 1px solid var(--border);
+            color: var(--text);
+            align-self: flex-start;
+        }
+        .system-message {
+            background: var(--accentSoft);
+            color: var(--muted);
+            align-self: center;
+            font-size: 12px;
+            padding: 5px 12px;
+            border-radius: 999px;
+        }
+        .chat-message a { color: inherit; text-decoration: underline; word-break: break-all; }
 
-        .chat-input-row {
+        .chat-input-container {
+            padding: 12px 14px;
+            border-top: 1px solid var(--border);
             display: flex;
             gap: 8px;
-            padding: 12px 16px;
-            border-top: 1px solid var(--border);
             flex-shrink: 0;
         }
         .chat-input {
             flex: 1;
+            min-width: 0;
             padding: 10px 14px;
             border: 1px solid var(--border);
             border-radius: 10px;
@@ -1096,13 +1101,13 @@
             border-color: var(--accent);
             box-shadow: 0 0 0 3px rgba(14,165,164,0.15);
         }
-        .chat-send {
+        .send-btn {
             flex-shrink: 0;
             width: 40px;
             height: 40px;
-            border: none;
             background: var(--accent);
             color: #fff;
+            border: none;
             border-radius: 10px;
             cursor: pointer;
             display: flex;
@@ -1110,24 +1115,34 @@
             justify-content: center;
             transition: background 0.15s, opacity 0.15s;
         }
-        .chat-send:hover:not(:disabled) { background: var(--accentHover); }
-        .chat-send:disabled { opacity: 0.4; cursor: not-allowed; }
+        .send-btn svg { width: 18px; height: 18px; }
+        .send-btn:hover:not(:disabled) { background: var(--accentHover); }
+        .send-btn:disabled { opacity: 0.4; cursor: not-allowed; }
 
+        /* Mobile: full-screen, not draggable/resizable */
         @media (max-width: 640px) {
-            .chat-panel { width: 100%; border-left: none; }
-            .chat-header { padding: 12px 14px; }
-            .chat-messages { padding: 10px 12px; gap: 8px; }
-            .chat-input-row { padding: 10px 12px; gap: 6px; }
+            .message-channel {
+                inset: 0 !important;
+                width: 100% !important;
+                height: 100dvh !important;
+                right: auto;
+                bottom: auto;
+                border: none;
+                border-radius: 0;
+                resize: none;
+                max-width: none;
+                max-height: none;
+            }
+            .channel-header { cursor: default; padding: 14px 16px; }
+            .channel-messages { padding: 12px 14px; }
+            .chat-input-container { padding: 12px 14px; }
             .chat-input { font-size: 16px; padding: 12px 14px; } /* 16px prevents iOS zoom */
-            .chat-send { width: 44px; height: 44px; }
-            .chat-close { padding: 8px; }
-            .chat-close svg { width: 22px; height: 22px; }
-            .chat-msg-bubble { font-size: 14px; padding: 9px 13px; }
-            .chat-msg { max-width: 90%; }
-            /* Chat button in topbar — icon-only on mobile to save space */
+            .send-btn { width: 44px; height: 44px; }
+            .close-channel-btn { width: 32px; height: 32px; }
+            .close-channel-btn svg { width: 20px; height: 20px; }
+            .chat-message { font-size: 14px; max-width: 90%; }
             #chatBtn .chat-btn-label { display: none; }
             #chatBtn { padding: 4px 8px; }
-            .chat-unread-badge { font-size: 9px; min-width: 14px; height: 14px; line-height: 14px; top: -3px; right: -3px; }
         }
 
         /* Toast Notifications */
@@ -1240,27 +1255,30 @@
             <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
             Reset
         </button>
-        <button class="topbar-btn" id="chatBtn" title="Chat">
+        <button class="topbar-btn" id="chatBtn" title="Chat" data-active="false">
             <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
             <span class="chat-btn-label">Chat</span>
-            <span class="chat-unread-badge" id="chatUnreadBadge"></span>
+            <span class="chat-unread-dot hidden" id="chatUnreadDot"></span>
         </button>
     </div>
 </div>
 
-<!-- Chat Panel -->
-<div id="chatPanel" class="chat-panel">
-    <div class="chat-header">
-        <span class="chat-title">Chat</span>
-        <button class="chat-close" id="chatCloseBtn" title="Close" aria-label="Close chat">
-            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+<!-- Chat: floating draggable message channel -->
+<div class="message-channel hidden" id="messageChannel">
+    <div class="channel-header" id="channelHeader">
+        <span class="channel-title">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+            Messages
+        </span>
+        <button class="close-channel-btn" id="closeChannelBtn" title="Close" aria-label="Close chat">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
         </button>
     </div>
-    <div class="chat-messages" id="chatMessages"></div>
-    <form class="chat-input-row" id="chatForm">
-        <input type="text" id="chatInput" class="chat-input" placeholder="Type a message" maxlength="500" autocomplete="off">
-        <button type="submit" class="chat-send" id="chatSendBtn" title="Send">
-            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+    <div class="channel-messages" id="channelMessages"></div>
+    <form class="chat-input-container" id="chatForm">
+        <input type="text" id="channelInput" class="chat-input" placeholder="Type a message…" maxlength="500" autocomplete="off">
+        <button type="submit" class="send-btn" id="sendChannelMessage" title="Send" aria-label="Send">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
         </button>
     </form>
 </div>
@@ -2257,69 +2275,75 @@
         document.querySelectorAll('.video-tile.floating').forEach(tile => resetTile(tile));
     });
 
-    // ── Chat ──
-    const chatPanel = $('chatPanel');
-    const chatBtn = $('chatBtn');
-    const chatMessages = $('chatMessages');
-    const chatInput = $('chatInput');
+    // ── Chat: floating draggable message channel ──
+    const messageChannel = $('messageChannel');
+    const channelHeader = $('channelHeader');
+    const channelMessages = $('channelMessages');
+    const channelInput = $('channelInput');
     const chatForm = $('chatForm');
-    const chatSendBtn = $('chatSendBtn');
-    const chatUnreadBadge = $('chatUnreadBadge');
-    let chatOpen = false;
-    let chatUnread = 0;
-    let chatMessageIds = new Set(); // dedupe by pid
+    const sendChannelBtn = $('sendChannelMessage');
+    const chatBtn = $('chatBtn');
+    const chatUnreadDot = $('chatUnreadDot');
+    let chatMessageIds = new Set();   // dedupe by pid
+    let systemMsgShown = false;
 
-    function escapeHtml(s) {
-        return String(s ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+    function isChatHidden() { return messageChannel.classList.contains('hidden'); }
+
+    // Turn URLs into safe clickable links — DOM nodes only, never innerHTML (XSS-safe)
+    function appendLinkified(el, text) {
+        const urlRe = /(https?:\/\/[^\s]+)/g;
+        let lastIndex = 0, match;
+        while ((match = urlRe.exec(text)) !== null) {
+            if (match.index > lastIndex)
+                el.appendChild(document.createTextNode(text.slice(lastIndex, match.index)));
+            const a = document.createElement('a');
+            a.href = match[0];
+            a.textContent = match[0];
+            a.target = '_blank';
+            a.rel = 'noopener noreferrer';
+            el.appendChild(a);
+            lastIndex = match.index + match[0].length;
+        }
+        if (lastIndex < text.length)
+            el.appendChild(document.createTextNode(text.slice(lastIndex)));
     }
 
-    function formatTime(uts) {
-        const d = new Date(uts);
-        return d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    // Render a message bubble. type: 'user' | 'partner' | 'system'
+    function addChannelMessage(text, type, author) {
+        const el = document.createElement('div');
+        el.className = `chat-message ${type}-message`;
+        if (type === 'partner' && author) {
+            const a = document.createElement('span');
+            a.className = 'msg-author';
+            a.textContent = author;
+            el.appendChild(a);
+        }
+        const p = document.createElement('p');
+        appendLinkified(p, text);
+        el.appendChild(p);
+        channelMessages.appendChild(el);
+        channelMessages.scrollTop = channelMessages.scrollHeight;
     }
 
-    function setChatUnread(n) {
-        chatUnread = n;
-        if (n > 0) {
-            chatUnreadBadge.textContent = n > 99 ? '99+' : String(n);
-            chatUnreadBadge.classList.add('visible');
+    // Append a message object from the SDK (history or real-time)
+    function appendSdkMessage(msg) {
+        if (!msg || !msg.pid || chatMessageIds.has(msg.pid)) return;
+        chatMessageIds.add(msg.pid);
+        const isSelf = msg.owner_id === VibeLive.user?.pid;
+        if (isSelf) {
+            addChannelMessage(msg.content, 'user');
         } else {
-            chatUnreadBadge.classList.remove('visible');
+            const author = msg.sender_display_name || msg.owner_username || 'Someone';
+            addChannelMessage(msg.content, 'partner', author);
+            if (isChatHidden()) chatUnreadDot.classList.remove('hidden');
         }
     }
 
-    function appendChatMessage(msg) {
-        if (!msg || !msg.pid || chatMessageIds.has(msg.pid)) return;
-        chatMessageIds.add(msg.pid);
-
-        // Remove empty placeholder if present
-        const empty = chatMessages.querySelector('.chat-empty');
-        if (empty) empty.remove();
-
-        const isSelf = msg.owner_id === VibeLive.user?.pid;
-        const author = msg.sender_display_name || msg.owner_username || 'Unknown';
-        const time = formatTime(msg.uts);
-
-        const wrap = document.createElement('div');
-        wrap.className = 'chat-msg' + (isSelf ? ' self' : '');
-        wrap.innerHTML = `
-            <div class="chat-msg-meta">
-                <span class="chat-msg-author">${escapeHtml(isSelf ? 'You' : author)}</span>
-                <span class="chat-msg-time">${escapeHtml(time)}</span>
-            </div>
-            <div class="chat-msg-bubble">${escapeHtml(msg.content)}</div>
-        `;
-        chatMessages.appendChild(wrap);
-        chatMessages.scrollTop = chatMessages.scrollHeight;
-
-        // Increment unread if not self and panel closed
-        if (!isSelf && !chatOpen) setChatUnread(chatUnread + 1);
-    }
-
     function clearChat() {
-        chatMessages.innerHTML = '<div class="chat-empty">No messages yet. Say hi!</div>';
+        channelMessages.innerHTML = '';
         chatMessageIds.clear();
-        setChatUnread(0);
+        systemMsgShown = false;
+        chatUnreadDot.classList.add('hidden');
     }
 
     async function loadChatHistory() {
@@ -2330,15 +2354,14 @@
         }
         const channelId = VibeLive.channel?.id;
         if (!channelId) return;
+        if (!systemMsgShown) {
+            addChannelMessage('Chat started', 'system');
+            systemMsgShown = true;
+        }
         try {
             const messages = await VibeLive.getMessages(channelId, { count: 50 });
-            const chronological = [...(messages || [])].reverse();
-            if (chronological.length === 0) {
-                chatMessages.innerHTML = '<div class="chat-empty">No messages yet. Say hi!</div>';
-            } else {
-                chatMessages.innerHTML = '';
-                chronological.forEach(appendChatMessage);
-            }
+            // API returns newest-first → render oldest-first
+            [...(messages || [])].reverse().forEach(appendSdkMessage);
         } catch (e) {
             console.error('Chat history load failed:', e);
             // Don't break the join flow — chat just won't have history
@@ -2346,42 +2369,70 @@
     }
 
     function openChat() {
-        chatOpen = true;
-        chatPanel.classList.add('open');
-        setChatUnread(0);
-        setTimeout(() => chatInput.focus(), 200);
+        messageChannel.classList.remove('hidden');
+        chatBtn.dataset.active = 'true';
+        chatUnreadDot.classList.add('hidden');
+        if (window.matchMedia('(max-width: 640px)').matches === false) {
+            setTimeout(() => channelInput.focus(), 100);
+        }
     }
 
     function closeChat() {
-        chatOpen = false;
-        chatPanel.classList.remove('open');
+        messageChannel.classList.add('hidden');
+        chatBtn.dataset.active = 'false';
     }
 
-    chatBtn.addEventListener('click', () => chatOpen ? closeChat() : openChat());
-    $('chatCloseBtn').addEventListener('click', closeChat);
+    chatBtn.addEventListener('click', () => isChatHidden() ? openChat() : closeChat());
+    $('closeChannelBtn').addEventListener('click', closeChat);
 
     chatForm.addEventListener('submit', async (e) => {
         e.preventDefault();
-        const text = chatInput.value.trim();
+        const text = channelInput.value.trim();
         if (!text) return;
         const channelId = VibeLive.channel?.id;
         if (!channelId) return;
 
-        chatSendBtn.disabled = true;
-        chatInput.disabled = true;
+        channelInput.value = '';
+        sendChannelBtn.disabled = true;
         try {
-            const msg = await VibeLive.sendMessage(channelId, text);
-            chatInput.value = '';
-            appendChatMessage(msg);
+            const created = await VibeLive.sendMessage(channelId, text);
+            // sendMessage doesn't echo back — render our own message locally
+            if (created && created.pid) {
+                appendSdkMessage(created);
+            } else {
+                addChannelMessage(text, 'user'); // fallback if no object returned
+            }
         } catch (err) {
             console.error('sendMessage failed:', err);
-            showToast('Couldn\'t send message. Please try again.', { type: 'error' });
+            addChannelMessage(text, 'user'); // still show locally so the user isn't lost
+            showToast('Message may not have sent. Please check your connection.', { type: 'error' });
         } finally {
-            chatSendBtn.disabled = false;
-            chatInput.disabled = false;
-            chatInput.focus();
+            sendChannelBtn.disabled = false;
+            channelInput.focus();
         }
     });
+
+    // Drag the panel by its header (desktop only — mobile is full-screen)
+    function makeDraggable(element, handle) {
+        let pos1 = 0, pos2 = 0, pos3 = 0, pos4 = 0;
+        handle.addEventListener('mousedown', (e) => {
+            if (window.matchMedia('(max-width: 640px)').matches) return; // no drag on mobile
+            if (e.target.closest('.close-channel-btn')) return;
+            e.preventDefault();
+            pos3 = e.clientX; pos4 = e.clientY;
+            document.onmouseup = () => { document.onmouseup = null; document.onmousemove = null; };
+            document.onmousemove = (ev) => {
+                ev.preventDefault();
+                pos1 = pos3 - ev.clientX; pos2 = pos4 - ev.clientY;
+                pos3 = ev.clientX; pos4 = ev.clientY;
+                element.style.top = (element.offsetTop - pos2) + 'px';
+                element.style.left = (element.offsetLeft - pos1) + 'px';
+                element.style.right = 'auto';
+                element.style.bottom = 'auto';
+            };
+        });
+    }
+    makeDraggable(messageChannel, channelHeader);
 
     // Real-time incoming messages — register inside channelSelected (after auth)
     let chatRealtimeRegistered = false;
@@ -2392,9 +2443,9 @@
             VibeLive.setOnMessage((msg) => {
                 const channelId = VibeLive.channel?.id;
                 if (!channelId) return;
-                if (msg.target_type === 'channel' && msg.target_id === channelId) {
-                    appendChatMessage(msg);
-                }
+                // Ignore channel messages not for this channel
+                if (msg.target_type === 'channel' && msg.target_id !== channelId) return;
+                appendSdkMessage(msg);
             });
             chatRealtimeRegistered = true;
         } catch (e) {
@@ -2404,7 +2455,7 @@
 
     // Esc to close chat
     document.addEventListener('keydown', (e) => {
-        if (e.key === 'Escape' && chatOpen) closeChat();
+        if (e.key === 'Escape' && !isChatHidden()) closeChat();
     });
 
     // ════════════════════════════════════════════
