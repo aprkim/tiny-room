@@ -2327,18 +2327,32 @@
         channelMessages.scrollTop = channelMessages.scrollHeight;
     }
 
-    // Append a message object from the SDK (history or real-time)
-    function appendSdkMessage(msg) {
+    function getMyUserId() {
+        return VibeLive.user?.pid || VibeLive.user?.id || null;
+    }
+
+    // For history: include isSelf check (history contains your own past messages)
+    function appendHistoryMessage(msg) {
         if (!msg || !msg.pid || chatMessageIds.has(msg.pid)) return;
         chatMessageIds.add(msg.pid);
-        const isSelf = msg.owner_id === VibeLive.user?.pid;
+        const myId = getMyUserId();
+        const isSelf = myId && msg.owner_id === myId;
         if (isSelf) {
             addChannelMessage(msg.content, 'user');
         } else {
             const author = msg.sender_display_name || msg.owner_username || 'Someone';
             addChannelMessage(msg.content, 'partner', author);
-            if (isChatHidden()) chatUnreadDot.classList.remove('hidden');
         }
+    }
+
+    // For real-time: SDK guarantees this only fires for OTHERS' messages
+    // — so we don't need isSelf detection, just dedup
+    function appendIncomingMessage(msg) {
+        if (!msg || (msg.pid && chatMessageIds.has(msg.pid))) return;
+        if (msg.pid) chatMessageIds.add(msg.pid);
+        const author = msg.sender_display_name || msg.owner_username || 'Someone';
+        addChannelMessage(msg.content, 'partner', author);
+        if (isChatHidden()) chatUnreadDot.classList.remove('hidden');
     }
 
     function clearChat() {
@@ -2363,7 +2377,7 @@
         try {
             const messages = await VibeLive.getMessages(channelId, { count: 50 });
             // API returns newest-first → render oldest-first
-            [...(messages || [])].reverse().forEach(appendSdkMessage);
+            [...(messages || [])].reverse().forEach(appendHistoryMessage);
         } catch (e) {
             console.error('Chat history load failed:', e);
             // Don't break the join flow — chat just won't have history
@@ -2399,11 +2413,8 @@
         try {
             const created = await VibeLive.sendMessage(channelId, text);
             // sendMessage doesn't echo back — render our own message locally
-            if (created && created.pid) {
-                appendSdkMessage(created);
-            } else {
-                addChannelMessage(text, 'user'); // fallback if no object returned
-            }
+            if (created && created.pid) chatMessageIds.add(created.pid);
+            addChannelMessage(text, 'user');
         } catch (err) {
             console.error('sendMessage failed:', err);
             addChannelMessage(text, 'user'); // still show locally so the user isn't lost
@@ -2447,7 +2458,7 @@
                 if (!channelId) return;
                 // Ignore channel messages not for this channel
                 if (msg.target_type === 'channel' && msg.target_id !== channelId) return;
-                appendSdkMessage(msg);
+                appendIncomingMessage(msg);
             });
             chatRealtimeRegistered = true;
         } catch (e) {
