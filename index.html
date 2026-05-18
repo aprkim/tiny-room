@@ -1592,28 +1592,33 @@
     }
 
     function enableDrag(tile) {
-        let startX, startY, startLeft, startTop, dragging = false;
+        let startX, startY, startLeft, startTop, dragging = false, downRect = null;
 
         function onDown(cx, cy) {
-            const rect = tile.getBoundingClientRect();
+            // Just record start position — DO NOT float the tile yet.
+            // We only float once the user actually drags past the threshold.
             startX = cx;
             startY = cy;
-
-            if (!tile.classList.contains('floating')) {
-                // Pop out of grid into floating
-                makeFloating(tile, rect.left, rect.top, rect.width, rect.height);
-            }
-            startLeft = parseFloat(tile.style.left);
-            startTop = parseFloat(tile.style.top);
+            downRect = tile.getBoundingClientRect();
+            startLeft = tile.classList.contains('floating') ? parseFloat(tile.style.left) : downRect.left;
+            startTop  = tile.classList.contains('floating') ? parseFloat(tile.style.top)  : downRect.top;
             dragging = false;
         }
 
         function onMove(cx, cy) {
             const dx = cx - startX;
             const dy = cy - startY;
-            if (Math.abs(dx) > 3 || Math.abs(dy) > 3) dragging = true;
-            if (!dragging) return;
-            tile.classList.add('dragging');
+            if (!dragging) {
+                if (Math.abs(dx) <= 3 && Math.abs(dy) <= 3) return; // not a drag yet
+                dragging = true;
+                // First real movement — now pop out of grid
+                if (!tile.classList.contains('floating')) {
+                    makeFloating(tile, downRect.left, downRect.top, downRect.width, downRect.height);
+                    startLeft = downRect.left;
+                    startTop = downRect.top;
+                }
+                tile.classList.add('dragging');
+            }
             tile.style.left = (startLeft + dx) + 'px';
             tile.style.top = (startTop + dy) + 'px';
         }
