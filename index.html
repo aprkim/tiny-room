@@ -2537,11 +2537,17 @@
 
     // REQUIRED: remoteStreamStart -- create remote tile via registerTile()
     VibeLive.on('remoteStreamStart', (memberId, streamType) => {
+        const tileId = `tile-${memberId}-${streamType}`;
+        const isNewTile = !document.getElementById(tileId);
         const m = VibeLive.getMember(memberId);
         createTile(memberId, m?.displayName || 'Remote', streamType, false);
-        // Read state explicitly to catch any memberStateChange that fired before tile existed
-        const state = VibeLive.getMemberState(memberId);
-        if (state) updateTileFromState(memberId, state);
+        // Only read state on FIRST creation — duplicate stream_start events
+        // (which the SDK sometimes fires on SFU re-announcement) would otherwise
+        // re-toggle the screenshare tile's display and cause a visible flash.
+        if (isNewTile) {
+            const state = VibeLive.getMemberState(memberId);
+            if (state) updateTileFromState(memberId, state);
+        }
         // Beep only when the first remote participant joins this session (camera stream)
         if (streamType === 'camera' && !participantJoinedOnce) {
             participantJoinedOnce = true;
