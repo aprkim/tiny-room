@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Watermark v2 Preview — TinyRoom</title>
+    <style>
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial;
+            background: #0f172a;
+            color: #e5e7eb;
+            min-height: 100vh;
+            padding: 28px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 22px;
+        }
+        h1 { font-size: 19px; font-weight: 800; color: #0EA5A4; }
+        .sub { font-size: 13px; color: #9ca3af; margin-top: -14px; }
+        .grid {
+            display: flex;
+            gap: 18px;
+            flex-wrap: wrap;
+            justify-content: center;
+            width: 100%;
+        }
+        .wrap { display: flex; flex-direction: column; gap: 8px; align-items: center; }
+        .wrap .caption { font-size: 12px; color: #9ca3af; }
+
+        .tile {
+            position: relative;
+            width: 420px;
+            max-width: 90vw;
+            aspect-ratio: 16 / 9;
+            border-radius: 16px;
+            overflow: hidden;
+            border: 1px solid #273244;
+        }
+        .bg-dark { background: linear-gradient(135deg, #2a3f5f 0%, #1a2a44 100%); }
+        .bg-light { background: linear-gradient(135deg, #e8eef6 0%, #c5d2e6 100%); }
+        .bg-bright { background: linear-gradient(135deg, #fef3c7 0%, #fde68a 60%, #fff 100%); }
+        .bg-busy { background-image: repeating-linear-gradient(45deg, #334155 0, #334155 14px, #475569 14px, #475569 28px); }
+        .bg-photo {
+            background: linear-gradient(135deg, #7c3a3a 0%, #b06a3a 50%, #d9b06a 100%);
+        }
+
+        .initials {
+            position: absolute; inset: 0;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 46px; font-weight: 700; color: rgba(255,255,255,0.22);
+        }
+        .bg-light .initials, .bg-bright .initials { color: rgba(0,0,0,0.18); }
+
+        .member-info {
+            position: absolute; bottom: 0; left: 0; right: 0;
+            padding: 8px 10px; display: flex; align-items: center; justify-content: space-between;
+            background: linear-gradient(transparent, rgba(0,0,0,.5));
+        }
+        .member-name { font-size: 12px; font-weight: 600; color: #fff; text-shadow: 0 1px 3px rgba(0,0,0,.4); }
+    </style>
+</head>
+<body>
+    <h1>Watermark v2 — Glass pill</h1>
+    <p class="sub">The exact design you pasted, shown on 5 tile backgrounds to check legibility.</p>
+
+    <div class="grid" id="grid"></div>
+
+    <script>
+    const watermarkHTML = `
+      <div class="makedo-watermark" style="position: absolute; top: 8px; left: 8px; display: inline-flex; align-items: center; font-size: 10px; color: rgba(255, 255, 255, 0.92); background: rgba(15, 23, 41, 0.65); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); padding: 3px 8px; border-radius: 999px; border: 0.5px solid rgba(255, 255, 255, 0.12); letter-spacing: 0.2px; pointer-events: none; z-index: 10;">
+        Powered by&nbsp;<span style="color: #5DCAA5; font-weight: 500;">VibeLive</span>
+      </div>`;
+
+    const backgrounds = [
+        { cls: 'bg-dark', label: 'Dark video', initials: 'AK' },
+        { cls: 'bg-light', label: 'Light video', initials: 'JL' },
+        { cls: 'bg-bright', label: 'Bright / white video', initials: 'SC' },
+        { cls: 'bg-busy', label: 'Busy / patterned', initials: 'RP' },
+        { cls: 'bg-photo', label: 'Warm photo', initials: 'MW' },
+    ];
+
+    const grid = document.getElementById('grid');
+    backgrounds.forEach(b => {
+        const wrap = document.createElement('div');
+        wrap.className = 'wrap';
+        wrap.innerHTML = `
+            <div class="tile ${b.cls}">
+                <div class="initials">${b.initials}</div>
+                ${watermarkHTML}
+                <div class="member-info"><span class="member-name">Participant</span></div>
+            </div>
+            <span class="caption">${b.label}</span>
+        `;
+        grid.appendChild(wrap);
+    });
+    </script>
+</body>
+</html>
