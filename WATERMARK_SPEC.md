@@ -68,12 +68,9 @@ VibeLive.registerTile(memberId, 'camera', el, { watermark: false });
 
 ---
 
-## 3. Live previews (built in TinyRoom)
+## 3. Live preview (built in TinyRoom)
 
-- Full design on 5 backgrounds: https://room.tinywins.space/watermark-v2.html
 - Small tiles (presentation mode): https://room.tinywins.space/watermark-v2-small.html
-- Mobile (3 layouts): https://room.tinywins.space/watermark-v2-mobile.html
-- Interactive sandbox (tweak everything): https://room.tinywins.space/watermark-preview.html
 
 ---
 
