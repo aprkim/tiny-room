@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Watermark v2 — Small tiles preview</title>
+    <style>
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+        :root {
+            --bg: #0f172a; --card: #111827; --border: #273244;
+            --text: #e5e7eb; --muted: #9ca3af; --accent: #0EA5A4;
+            --sans: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial;
+        }
+        body {
+            font-family: var(--sans);
+            background: var(--bg);
+            color: var(--text);
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+        .banner {
+            background: var(--accent); color: #042f2e;
+            font-size: 12px; font-weight: 700; text-align: center;
+            padding: 6px 12px; flex-shrink: 0;
+        }
+        .live-content {
+            flex: 1; min-height: 0;
+            display: flex; flex-direction: column;
+            padding: 12px; gap: 10px;
+        }
+        /* Screenshare area (dominant) */
+        #screenshareGrid {
+            flex: 4; min-height: 0;
+            display: flex; gap: 8px;
+        }
+        #screenshareGrid .tile { flex: 1 1 0; }
+        /* Camera strip (small) */
+        #cameraStrip {
+            flex: 1; max-height: 22%;
+            display: flex; gap: 8px; justify-content: center;
+        }
+        #cameraStrip .tile { flex: 0 0 auto; height: 100%; aspect-ratio: 16/9; }
+
+        .tile {
+            position: relative;
+            border-radius: 12px;
+            overflow: hidden;
+            border: 1px solid var(--border);
+        }
+        .bg-screen { background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%); }
+        .bg-a { background: linear-gradient(135deg, #2a3f5f, #1a2a44); }
+        .bg-b { background: linear-gradient(135deg, #3a5a4a, #1f3a2c); }
+        .bg-c { background: linear-gradient(135deg, #e8eef6, #c5d2e6); }
+        .bg-d { background-image: repeating-linear-gradient(45deg, #334155 0, #334155 10px, #475569 10px, #475569 20px); }
+
+        .screen-content {
+            position: absolute; inset: 0;
+            display: flex; align-items: center; justify-content: center;
+            color: rgba(255,255,255,0.3); font-size: 14px; font-weight: 600;
+        }
+        .initials {
+            position: absolute; inset: 0;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 26px; font-weight: 700; color: rgba(255,255,255,0.25);
+        }
+        .bg-c .initials { color: rgba(0,0,0,0.2); }
+        .member-info {
+            position: absolute; bottom: 0; left: 0; right: 0;
+            padding: 4px 8px;
+            background: linear-gradient(transparent, rgba(0,0,0,.5));
+        }
+        .member-name { font-size: 10px; font-weight: 600; color: #fff; text-shadow: 0 1px 2px rgba(0,0,0,.5); }
+
+        .toggle { position: fixed; bottom: 14px; right: 14px; display: flex; gap: 8px; z-index: 50; }
+        .toggle button {
+            background: var(--card); border: 1px solid var(--border); color: var(--text);
+            border-radius: 8px; padding: 8px 12px; font-size: 12px; cursor: pointer;
+        }
+        .toggle button.active { background: var(--accent); border-color: var(--accent); color: #042f2e; }
+    </style>
+</head>
+<body>
+    <div class="banner">Presentation mode · 4 participants + 1 screen share · watermark on every tile</div>
+    <div class="live-content">
+        <div id="screenshareGrid"></div>
+        <div id="cameraStrip"></div>
+    </div>
+
+    <div class="toggle">
+        <button id="scaleToggle">Scale watermark down on small tiles: OFF</button>
+    </div>
+
+    <script>
+    // Full-size watermark (as pasted)
+    function watermark(small) {
+        const fs = small ? 8 : 10;
+        const pad = small ? '2px 6px' : '3px 8px';
+        return `<div class="makedo-watermark" style="position:absolute; top:6px; left:6px; display:inline-flex; align-items:center; font-size:${fs}px; color:rgba(255,255,255,0.92); background:rgba(15,23,41,0.65); backdrop-filter:blur(10px); -webkit-backdrop-filter:blur(10px); padding:${pad}; border-radius:999px; border:0.5px solid rgba(255,255,255,0.12); letter-spacing:0.2px; pointer-events:none; z-index:10;">Powered by&nbsp;<span style="color:#5DCAA5; font-weight:500;">VibeLive</span></div>`;
+    }
+
+    let scaleSmall = false;
+
+    function build() {
+        // Screenshare tile (large)
+        document.getElementById('screenshareGrid').innerHTML = `
+            <div class="tile bg-screen">
+                <div class="screen-content">April's Screen</div>
+                ${watermark(false)}
+                <div class="member-info"><span class="member-name">April's Screen</span></div>
+            </div>`;
+
+        // 4 small camera tiles
+        const cams = [
+            { cls: 'bg-a', initials: 'AK', name: 'April (You)' },
+            { cls: 'bg-b', initials: 'JL', name: 'Jordan' },
+            { cls: 'bg-c', initials: 'SC', name: 'Sam' },
+            { cls: 'bg-d', initials: 'RP', name: 'Riley' },
+        ];
+        document.getElementById('cameraStrip').innerHTML = cams.map(c => `
+            <div class="tile ${c.cls}">
+                <div class="initials">${c.initials}</div>
+                ${watermark(scaleSmall)}
+                <div class="member-info"><span class="member-name">${c.name}</span></div>
+            </div>`).join('');
+    }
+
+    document.getElementById('scaleToggle').addEventListener('click', function () {
+        scaleSmall = !scaleSmall;
+        this.textContent = 'Scale watermark down on small tiles: ' + (scaleSmall ? 'ON' : 'OFF');
+        this.classList.toggle('active', scaleSmall);
+        build();
+    });
+
+    build();
+    </script>
+</body>
+</html>
