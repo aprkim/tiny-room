@@ -2188,7 +2188,7 @@
             await VibeLive.enterByRoomCode(room.room_code);
         } catch (e) {
             console.error('Start room error:', e);
-            showAlert(getUserMessage(e));
+            // Global error handler already surfaces the toast — don't duplicate.
             startBtn.disabled = false;
             startBtn.textContent = 'Start call';
         }
@@ -2214,12 +2214,8 @@
             await VibeLive.enterByRoomCode(code);
         } catch (e) {
             console.error('Join room error:', e);
-            const code_ = e?.code || '';
-            if (code_ === 'ROOM_NOT_FOUND' || code_.includes('NOT_FOUND')) {
-                showKickedModal('This room doesn\'t exist or has been removed.');
-            } else {
-                showAlert(getUserMessage(e));
-            }
+            // Note: the global error handler already shows a toast for these.
+            // Don't show a second message here (used to cause modal+toast duplicate).
             joinBtn.disabled = false;
             joinBtn.textContent = 'Join';
         }
@@ -2243,7 +2239,7 @@
             await VibeLive.startLive();
         } catch (e) {
             console.error('Go live error:', e);
-            showToast(getUserMessage(e), { type: 'error' });
+            // Global error handler already surfaces the toast — don't duplicate.
             goLiveBtn.disabled = false;
             goLiveBtn.textContent = 'Go Live';
         }
