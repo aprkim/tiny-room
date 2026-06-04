@@ -323,6 +323,8 @@
         .btn-danger:hover { background: var(--dangerBorder); color: #fff; }
 
         .btn:disabled { cursor: not-allowed; }
+        /* Dim only when explicitly marked as "blocked" (not during loading spinner) */
+        .btn.btn-blocked:disabled { opacity: 0.45; }
         .btn-full { width: 100%; }
         .join-row .btn { flex: 0 0 auto; min-width: 80px; padding: 14px 20px; }
 
@@ -1771,12 +1773,18 @@
     });
 
     function updateButtonPriority() {
-        if (codeInput.value.trim()) {
+        const hasCode = codeInput.value.trim() !== '';
+        if (hasCode) {
             joinBtn.className = 'btn btn-primary';
-            startBtn.className = 'btn btn-secondary btn-full';
+            startBtn.className = 'btn btn-secondary btn-full btn-blocked';
+            // Prevent accidentally creating a new room when invitee has a code
+            startBtn.disabled = true;
+            startBtn.title = 'Clear the room code to start a new room';
         } else {
             startBtn.className = 'btn btn-primary btn-full';
             joinBtn.className = 'btn btn-secondary';
+            startBtn.disabled = false;
+            startBtn.title = '';
         }
     }
 
