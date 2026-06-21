@@ -2,19 +2,26 @@
 <html>
 <head>
   <meta charset="utf-8">
-  <title>Redirecting...</title>
+  <title>Redirecting…</title>
   <script>
-    (function() {
-      var path = window.location.pathname;
-      var match = path.match(/^\/in\/(.+)/);
-      if (match) {
-        var slug = match[1].replace(/\/+$/g, '');
-        var params = new URLSearchParams(window.location.search);
-        params.set('slug', slug);
-        window.location.replace('/' + '?' + params.toString());
-      } else {
-        window.location.replace('/' + window.location.search);
+    (function () {
+      // ── Slug → room code map ──
+      // Add new entries here. Each visit to /SLUG redirects to /?code=ROOMCODE
+      var SLUGS = {
+        'vibelive': 'QNFSZN'
+      };
+
+      // Get the slug from the URL path (e.g. "/vibelive" → "vibelive")
+      var path = window.location.pathname.replace(/^\/+|\/+$/g, '');
+
+      if (SLUGS[path]) {
+        // Known vanity slug → redirect with room code prefilled
+        window.location.replace('/?code=' + SLUGS[path] + window.location.hash);
+        return;
       }
+
+      // Unknown path → just go home, preserve any existing query string/hash
+      window.location.replace('/' + window.location.search + window.location.hash);
     })();
   </script>
 </head>
