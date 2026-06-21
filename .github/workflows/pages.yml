@@ -22,6 +22,11 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: actions/configure-pages@v5
+      # Vanity slug routing: GitHub Pages serves 404.html for any unknown path
+      # (e.g. /vibelive). We replace it with a copy of index.html so the same
+      # app loads and detects the slug from the URL path. URL stays clean.
+      - name: Copy index.html to 404.html for vanity slug routing
+        run: cp index.html 404.html
       - uses: actions/upload-pages-artifact@v3
         with:
           path: .
