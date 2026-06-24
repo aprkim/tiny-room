@@ -192,6 +192,22 @@
             font-size: 15px;
             color: var(--muted);
         }
+        .beta-pill {
+            display: inline-block;
+            vertical-align: top;
+            background: rgba(14, 165, 164, 0.15);
+            color: var(--accent);
+            font-size: 11px;
+            font-weight: 700;
+            padding: 3px 8px;
+            border-radius: 999px;
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
+            margin-left: 8px;
+            position: relative;
+            top: 4px;
+            border: 1px solid rgba(14, 165, 164, 0.25);
+        }
         .entry-input {
             width: 100%;
             padding: 14px 18px;
@@ -205,7 +221,7 @@
             transition: border-color 0.2s, box-shadow 0.2s;
         }
         [data-theme="light"] .entry-input {
-            border-color: rgba(0,0,0,0.1);
+            border-color: rgba(0,0,0,0.22);
             background: rgba(0,0,0,0.02);
         }
         .entry-input:focus {
@@ -306,7 +322,7 @@
         }
         [data-theme="light"] .btn-secondary {
             background: rgba(0,0,0,0.02);
-            border-color: rgba(0,0,0,0.1);
+            border-color: rgba(0,0,0,0.22);
         }
         .btn-secondary:hover:not(:disabled) {
             background: rgba(255,255,255,0.08);
@@ -1283,7 +1299,7 @@
 <div id="entryScreen">
     <div class="entry-inner">
         <div class="entry-hero">
-            <h1>TinyRoom</h1>
+            <h1>TinyRoom<span class="beta-pill">Beta</span></h1>
             <p>Start a call in seconds</p>
         </div>
         <input type="text" class="entry-input" id="nameInput" placeholder="Your name" maxlength="24" autofocus>
@@ -1373,7 +1389,6 @@
     // ── Init ──
     VibeLive.init({
         projectId: 'vlp_1eZR3nR43ETF',
-        projectKey: 'vlk_HrA3D0oiW6cTlrPsD0NIGmsy',
         features: { showMemberQuality: true, showLocalQuality: true },
     });
 
