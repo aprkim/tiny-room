@@ -1583,9 +1583,68 @@
         });
     });
 
+    // ── Layout memory ──
+    // Once you've dragged or resized a tile, that arrangement is remembered on
+    // this device and restored the next time the same person shows up. Tiles
+    // are matched by display name (identities change every session), positions
+    // are stored as fractions of the viewport so they adapt to screen size,
+    // and only tiles you actually moved are affected — the grid stays default
+    // for everyone else. "Reset layout" snaps everything back and forgets all.
+    const LAYOUT_KEY = 'tinyroom-layout';
+
+    function normName(name) { return String(name || '').trim().toLowerCase(); }
+    function layoutKeyFor(name, streamType, isLocal) { return (isLocal ? 'me' : normName(name)) + '|' + streamType; }
+
+    function loadLayouts() {
+        try { return JSON.parse(localStorage.getItem(LAYOUT_KEY) || '{}') || {}; } catch (e) { return {}; }
+    }
+    function saveLayouts(map) {
+        try { localStorage.setItem(LAYOUT_KEY, JSON.stringify(map)); } catch (e) { /* storage unavailable */ }
+    }
+
+    function saveTileLayout(tile) {
+        const key = tile.dataset.layoutKey;
+        if (!key || !tile.classList.contains('floating')) return;
+        // Save the same coordinates makeFloating() sets (style left/top/width/
+        // height), so a restore reproduces the exact box regardless of how the
+        // .floating CSS renders it.
+        const vw = window.innerWidth, vh = window.innerHeight;
+        if (!vw || !vh) return;
+        const r = tile.getBoundingClientRect();
+        const x = parseFloat(tile.style.left), y = parseFloat(tile.style.top);
+        const w = parseFloat(tile.style.width) || r.width, h = parseFloat(tile.style.height) || r.height;
+        if (!isFinite(x) || !isFinite(y)) return;
+        const map = loadLayouts();
+        map[key] = { x: x / vw, y: y / vh, w: w / vw, h: h / vh };
+        saveLayouts(map);
+    }
+
+    function forgetTileLayout(tile) {
+        const key = tile.dataset.layoutKey;
+        const map = loadLayouts();
+        if (key && map[key]) { delete map[key]; saveLayouts(map); }
+    }
+
+    // Apply a remembered position to a tile that has just landed in its grid.
+    function restoreTileLayout(tile) {
+        if (!tile || tile.classList.contains('floating') || tile.dataset.layoutRestored === '1') return;
+        const saved = loadLayouts()[tile.dataset.layoutKey];
+        if (!saved) return;
+        tile.dataset.layoutRestored = '1';
+        const vw = window.innerWidth, vh = window.innerHeight;
+        const w = Math.max(100, Math.min(vw, saved.w * vw));
+        const h = Math.max(70, Math.min(vh, saved.h * vh));
+        const x = Math.min(Math.max(0, saved.x * vw), Math.max(0, vw - w));   // never off-screen
+        const y = Math.min(Math.max(0, saved.y * vh), Math.max(0, vh - h));
+        makeFloating(tile, x, y, w, h);
+        updateGridLayout();
+    }
+
     // ── Free Move & Resize ──
 
     function resetTile(tile) {
+        forgetTileLayout(tile);
+        delete tile.dataset.layoutRestored;
         tile.classList.remove('floating');
         tile.style.left = '';
         tile.style.top = '';
@@ -1642,6 +1701,7 @@
 
         function onUp() {
             tile.classList.remove('dragging');
+            if (dragging) saveTileLayout(tile);
         }
 
         // Mouse
@@ -1707,7 +1767,7 @@
             e.stopPropagation();
             onDown(e.clientX, e.clientY);
             function mm(e) { onMove(e.clientX, e.clientY); }
-            function mu() { document.removeEventListener('mousemove', mm); document.removeEventListener('mouseup', mu); }
+            function mu() { document.removeEventListener('mousemove', mm); document.removeEventListener('mouseup', mu); saveTileLayout(tile); }
             document.addEventListener('mousemove', mm);
             document.addEventListener('mouseup', mu);
         });
@@ -1718,7 +1778,7 @@
             const t = e.touches[0];
             onDown(t.clientX, t.clientY);
             function tm(e) { const t = e.touches[0]; onMove(t.clientX, t.clientY); }
-            function te() { document.removeEventListener('touchmove', tm); document.removeEventListener('touchend', te); }
+            function te() { document.removeEventListener('touchmove', tm); document.removeEventListener('touchend', te); saveTileLayout(tile); }
             document.addEventListener('touchmove', tm, { passive: true });
             document.addEventListener('touchend', te);
         }, { passive: false });
@@ -1882,6 +1942,7 @@
         tile.dataset.streamType = streamType;
         tile.dataset.isLocal = isLocal ? 'true' : 'false';
         tile.dataset.streamType = streamType;
+        tile.dataset.layoutKey = layoutKeyFor(name, streamType, isLocal);
 
         // Spotlight button
         const spotlightBtn = document.createElement('button');
@@ -1964,6 +2025,10 @@
         enableResize(tile);
 
         updateGridLayout();
+        // Remote camera tiles land in the grid right away — restore now. Local
+        // tiles restore at localJoined (they sit in the preview until then) and
+        // screenshare tiles when they become visible.
+        if (!isLocal && streamType === 'camera') restoreTileLayout(tile);
         return tile;
     }
 
@@ -2037,6 +2102,7 @@
         if (screenTile) {
             const screenOn = state.screenVideo !== 'OFF';
             screenTile.style.display = screenOn ? 'block' : 'none';
+            if (screenOn) restoreTileLayout(screenTile);
             const sp = screenTile.querySelector('.video-placeholder');
             const sv = screenTile.querySelector('video');
             if (sp) sp.classList.toggle('hidden', screenOn);
@@ -2300,6 +2366,7 @@
     // ── Reset Layout ──
     $('resetLayoutBtn').addEventListener('click', () => {
         document.querySelectorAll('.video-tile.floating').forEach(tile => resetTile(tile));
+        try { localStorage.removeItem(LAYOUT_KEY); } catch (e) {}
     });
 
     // ── Chat: floating draggable message channel ──
@@ -2592,6 +2659,7 @@
         if (localScreenTile) screenshareGrid.appendChild(localScreenTile);
 
         updateGridLayout();
+        if (localCamTile) restoreTileLayout(localCamTile);
         updateLiveControls();
 
         // Reset go live button
